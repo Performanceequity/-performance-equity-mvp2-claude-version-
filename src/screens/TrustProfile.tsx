@@ -3,7 +3,7 @@
  * Trust progression, attested devices, verification statistics
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { TrustProfile as TrustProfileType, ViewType } from '../types';
 import { COLORS, TRUST_TIERS } from '../constants';
 import { StatusIndicator } from '../components/core/StatusIndicator';
@@ -26,6 +26,7 @@ export function TrustProfile({
   trust,
   onNavigate,
 }: TrustProfileProps) {
+  const [showAddDevice, setShowAddDevice] = useState(false);
   const tierConfig = TRUST_TIERS[trust.tier];
   const nextTier = getNextTier(trust.tier);
   const progressToNext = nextTier
@@ -36,7 +37,7 @@ export function TrustProfile({
   const devices: AttestedDevice[] = useMemo(() => [
     {
       id: 'device-1',
-      name: 'Apple Watch Series 9',
+      name: 'Apple Watch Series 11',
       type: 'watch',
       attested: true,
       lastSeen: Date.now() - 1000 * 60 * 5, // 5 min ago
@@ -44,7 +45,7 @@ export function TrustProfile({
     },
     {
       id: 'device-2',
-      name: 'iPhone 15 Pro',
+      name: 'iPhone 17 Pro Max',
       type: 'phone',
       attested: true,
       lastSeen: Date.now() - 1000 * 60 * 2, // 2 min ago
@@ -231,15 +232,87 @@ export function TrustProfile({
           </div>
 
           <button
-            className="w-full mt-4 py-2 rounded font-mono text-sm border transition-all"
+            onClick={() => setShowAddDevice(true)}
+            className="w-full mt-4 py-2 rounded font-mono text-sm border transition-all hover:border-opacity-60"
             style={{
-              borderColor: COLORS.border,
-              color: COLORS.textSecondary,
+              borderColor: COLORS.accent,
+              color: COLORS.accent,
+              backgroundColor: COLORS.accent + '10',
             }}
           >
             + Add Device
           </button>
         </section>
+
+        {/* Add Device Modal */}
+        {showAddDevice && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}
+          >
+            <div
+              className="w-full max-w-md p-6 rounded-lg border"
+              style={{
+                backgroundColor: COLORS.surface,
+                borderColor: COLORS.border,
+              }}
+            >
+              <h3
+                className="text-lg font-mono font-bold mb-4"
+                style={{ color: COLORS.textPrimary }}
+              >
+                ADD NEW DEVICE
+              </h3>
+              <p
+                className="text-xs font-mono mb-6"
+                style={{ color: COLORS.textMuted }}
+              >
+                Connect a new wearable or device to your trusted network.
+              </p>
+
+              <div className="space-y-3 mb-6">
+                {[
+                  { name: 'Apple Watch', icon: '⌚' },
+                  { name: 'Garmin Device', icon: '📱' },
+                  { name: 'WHOOP Band', icon: '⏱' },
+                  { name: 'Oura Ring', icon: '💍' },
+                ].map((device) => (
+                  <button
+                    key={device.name}
+                    className="w-full p-3 rounded border text-left flex items-center gap-3 transition-all hover:border-opacity-60"
+                    style={{
+                      backgroundColor: COLORS.background,
+                      borderColor: COLORS.border,
+                    }}
+                    onClick={() => {
+                      alert(`${device.name} connection initiated. Follow the pairing instructions on your device.`);
+                      setShowAddDevice(false);
+                    }}
+                  >
+                    <span className="text-2xl">{device.icon}</span>
+                    <span
+                      className="text-sm font-mono"
+                      style={{ color: COLORS.textPrimary }}
+                    >
+                      {device.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setShowAddDevice(false)}
+                className="w-full py-2 rounded font-mono text-sm border"
+                style={{
+                  borderColor: COLORS.border,
+                  color: COLORS.textSecondary,
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Verification Statistics */}
         <section
@@ -379,6 +452,71 @@ export function TrustProfile({
             <p>
               <span style={{ color: COLORS.error }}>-</span> Failed liveness challenges
             </p>
+          </div>
+        </section>
+
+        {/* Quick Links */}
+        <section
+          className="p-4 rounded-lg border"
+          style={{
+            backgroundColor: COLORS.surface,
+            borderColor: COLORS.border,
+          }}
+        >
+          <h3
+            className="text-xs font-mono font-semibold uppercase tracking-wider mb-3"
+            style={{ color: COLORS.textSecondary }}
+          >
+            MANAGE
+          </h3>
+          <div className="space-y-2">
+            <button
+              onClick={() => onNavigate('equity-statements')}
+              className="w-full p-3 rounded text-left font-mono text-sm flex items-center justify-between transition-all"
+              style={{
+                backgroundColor: COLORS.background,
+                color: COLORS.textPrimary,
+              }}
+            >
+              <span>Performance Equity Statements</span>
+              <span style={{ color: COLORS.textMuted }}>→</span>
+            </button>
+
+            <button
+              onClick={() => onNavigate('redeem')}
+              className="w-full p-3 rounded text-left font-mono text-sm flex items-center justify-between transition-all"
+              style={{
+                backgroundColor: COLORS.background,
+                color: COLORS.textPrimary,
+              }}
+            >
+              <span>Redeem Rewards</span>
+              <span style={{ color: COLORS.textMuted }}>→</span>
+            </button>
+
+            <button
+              onClick={() => onNavigate('connect-devices')}
+              className="w-full p-3 rounded text-left font-mono text-sm flex items-center justify-between transition-all"
+              style={{
+                backgroundColor: COLORS.background,
+                color: COLORS.textPrimary,
+              }}
+            >
+              <span>Trusted Hardware</span>
+              <span style={{ color: COLORS.textMuted }}>→</span>
+            </button>
+
+            <button
+              onClick={() => onNavigate('settings')}
+              className="w-full p-3 rounded text-left font-mono text-sm flex items-center justify-between transition-all"
+              style={{
+                backgroundColor: COLORS.background,
+                color: COLORS.textPrimary,
+              }}
+            >
+              <span>Privacy & Settings</span>
+              <span style={{ color: COLORS.textMuted }}>→</span>
+            </button>
           </div>
         </section>
       </main>

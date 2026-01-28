@@ -12,6 +12,8 @@ interface TransactionRowProps {
   expanded?: boolean;
   onToggle?: () => void;
   showFullDetails?: boolean;
+  onAppealLiveness?: (transactionId: string) => void;
+  isAppealed?: boolean;
 }
 
 export function TransactionRow({
@@ -19,14 +21,19 @@ export function TransactionRow({
   expanded = false,
   onToggle,
   showFullDetails = false,
+  onAppealLiveness,
+  isAppealed = false,
 }: TransactionRowProps) {
-  const [isExpanded, setIsExpanded] = useState(expanded);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+
+  // Use external expanded state if onToggle is provided, otherwise use internal
+  const isExpanded = onToggle ? expanded : internalExpanded;
 
   const handleToggle = () => {
     if (onToggle) {
       onToggle();
     } else {
-      setIsExpanded(!isExpanded);
+      setInternalExpanded(!internalExpanded);
     }
   };
 
@@ -157,6 +164,8 @@ export function TransactionRow({
         <div
           className="border-t p-4"
           style={{ borderColor: COLORS.border }}
+          onClick={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
         >
           {/* Proof Chain */}
           <div className="mb-4">
@@ -189,7 +198,7 @@ export function TransactionRow({
           </div>
 
           {/* Full Merkle Root */}
-          <div>
+          <div className="mb-4">
             <h4
               className="text-xs font-mono font-semibold uppercase tracking-wider mb-1"
               style={{ color: COLORS.textSecondary }}
@@ -203,6 +212,121 @@ export function TransactionRow({
               {transaction.merkleRoot}
             </code>
           </div>
+
+          {/* Quarantine Appeal Section */}
+          {transaction.gate === 'quarantine' && !isAppealed && (
+            <div
+              className="p-4 rounded-lg border mt-4"
+              style={{
+                backgroundColor: COLORS.background,
+                borderColor: COLORS.gates.quarantine + '40',
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: COLORS.gates.quarantine + '20' }}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={COLORS.gates.quarantine}
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4
+                    className="text-sm font-mono font-semibold mb-1"
+                    style={{ color: COLORS.gates.quarantine }}
+                  >
+                    Session Quarantined
+                  </h4>
+                  <p
+                    className="text-xs font-mono mb-3"
+                    style={{ color: COLORS.textMuted }}
+                  >
+                    This session was flagged due to insufficient verification signals.
+                    You can appeal by completing a liveness check to verify your identity.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (onAppealLiveness) {
+                        onAppealLiveness(transaction.id);
+                      }
+                    }}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (onAppealLiveness) {
+                        onAppealLiveness(transaction.id);
+                      }
+                    }}
+                    className="px-4 py-2 rounded font-mono text-sm font-semibold transition-all active:opacity-70"
+                    style={{
+                      backgroundColor: COLORS.accent,
+                      color: COLORS.background,
+                      cursor: 'pointer',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Appeal with Liveness Check
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Appealed Success Message */}
+          {transaction.gate === 'quarantine' && isAppealed && (
+            <div
+              className="p-4 rounded-lg border mt-4"
+              style={{
+                backgroundColor: COLORS.success + '10',
+                borderColor: COLORS.success + '40',
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: COLORS.success + '20' }}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={COLORS.success}
+                    strokeWidth="2"
+                  >
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </div>
+                <div>
+                  <h4
+                    className="text-sm font-mono font-semibold"
+                    style={{ color: COLORS.success }}
+                  >
+                    Appeal Approved
+                  </h4>
+                  <p
+                    className="text-xs font-mono"
+                    style={{ color: COLORS.textSecondary }}
+                  >
+                    Liveness verified. Session upgraded to CONFIRMED. PES pending credit.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

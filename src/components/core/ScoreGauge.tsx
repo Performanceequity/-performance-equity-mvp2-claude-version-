@@ -87,7 +87,7 @@ export function ScoreGauge({
           className="text-xs font-mono uppercase tracking-[0.2em]"
           style={{ color: COLORS.textSecondary }}
         >
-          PERFORMANCE EQUITY SCORE
+          PERFORMANCE EQUITY SCORE<sup className="text-[8px]">™</sup>
         </p>
       </div>
 

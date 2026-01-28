@@ -21,6 +21,8 @@ import type {
   ScoreHistoryEntry,
   EquityStatement,
   HRZone,
+  PEBalance,
+  PETransaction,
 } from '../types';
 
 import {
@@ -34,10 +36,21 @@ import {
 // HELPER FUNCTIONS
 // ============================================
 
-const generateMerkleRoot = (): string => {
-  return '0x' + Array.from({ length: 64 }, () =>
-    Math.floor(Math.random() * 16).toString(16)
-  ).join('');
+/**
+ * Generate deterministic Merkle root from transaction ID
+ * Same ID always produces the same hash (like a receipt number)
+ */
+const generateMerkleRoot = (transactionId: string): string => {
+  // Simple deterministic hash based on ID
+  let hash = 0;
+  for (let i = 0; i < transactionId.length; i++) {
+    hash = ((hash << 5) - hash) + transactionId.charCodeAt(i);
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  const hashHex = Math.abs(hash).toString(16).padStart(8, '0');
+  // Create a consistent 64-char hex string using the ID
+  const idHex = transactionId.split('').map(c => c.charCodeAt(0).toString(16)).join('').padStart(12, '0');
+  return '0x' + hashHex + idHex.repeat(5).substring(0, 56);
 };
 
 // ============================================
@@ -161,7 +174,7 @@ export const mockGAVLLayers: GAVLLayer[] = [
     statusLabel: 'LOGGING',
     details: {
       lastEntry: new Date().toISOString(),
-      hash: generateMerkleRoot().slice(0, 12) + '...',
+      hash: generateMerkleRoot('audit-layer').slice(0, 12) + '...',
       zkProofs: 'enabled',
       microChallenges: 'ready',
     },
@@ -170,7 +183,7 @@ export const mockGAVLLayers: GAVLLayer[] = [
   {
     layer: 4,
     name: 'TRUST INDEX',
-    shortName: 'TRUST',
+    shortName: 'TRUDEX',
     status: 'nominal',
     statusLabel: 'GOLD',
     details: {
@@ -184,7 +197,7 @@ export const mockGAVLLayers: GAVLLayer[] = [
   {
     layer: 3,
     name: 'DEVICE ATTESTATION',
-    shortName: 'DEV ATT',
+    shortName: 'DEVA',
     status: 'active',
     statusLabel: 'VERIFIED',
     details: {
@@ -198,7 +211,7 @@ export const mockGAVLLayers: GAVLLayer[] = [
   {
     layer: 2,
     name: 'AI CONGRUENCY ENGINE',
-    shortName: 'AI CONG',
+    shortName: 'ACE',
     status: 'nominal',
     statusLabel: 'NOMINAL',
     details: {
@@ -303,7 +316,7 @@ export const mockWeeklyMetrics: WeeklyMetrics = {
 export const mockDevices: Device[] = [
   {
     id: 'dev-001',
-    name: 'Apple Watch Series 9',
+    name: 'Apple Watch Series 11',
     type: 'watch',
     brand: 'apple',
     isAttested: true,
@@ -312,7 +325,7 @@ export const mockDevices: Device[] = [
   },
   {
     id: 'dev-002',
-    name: 'iPhone 15 Pro',
+    name: 'iPhone 17 Pro Max',
     type: 'phone',
     brand: 'apple',
     isAttested: true,
@@ -355,7 +368,7 @@ export const mockTransactions: VerifiedTransaction[] = [
       { type: 'nfc', status: 'verified', timestamp: Date.now() - 2 * 60 * 60 * 1000, details: 'NFC anchor verified' },
       { type: 'gps', status: 'verified', timestamp: Date.now() - 2 * 60 * 60 * 1000, details: '33.9871, -118.4682 (within 12m)' },
       { type: 'wifi', status: 'verified', timestamp: Date.now() - 2 * 60 * 60 * 1000, details: 'BSSID match (GoldsGym_5G)' },
-      { type: 'device', status: 'verified', timestamp: Date.now() - 2 * 60 * 60 * 1000, details: 'Apple Watch S9 (attested)' },
+      { type: 'device', status: 'verified', timestamp: Date.now() - 2 * 60 * 60 * 1000, details: 'Apple Watch S11 (attested)' },
       { type: 'congruency', status: 'verified', timestamp: Date.now() - 60 * 1000, details: 'Score: 0.94' },
     ],
     chainOfCustody: [
@@ -368,7 +381,7 @@ export const mockTransactions: VerifiedTransaction[] = [
       { timestamp: Date.now() - 12 * 60 * 1000 + 3000, event: 'PES calculated', type: '+9.0' },
       { timestamp: Date.now() - 12 * 60 * 1000 + 4000, event: 'Merkle commit', type: '0x7f3a8b2c...' },
     ],
-    merkleRoot: generateMerkleRoot(),
+    merkleRoot: generateMerkleRoot('4a7f2c'),
   },
   {
     id: '3b8e1d',
@@ -378,8 +391,8 @@ export const mockTransactions: VerifiedTransaction[] = [
     duration: 30,
     zone: 'Z2',
     location: {
-      name: 'Santa Monica Beach',
-      coordinates: [34.0195, -118.4912],
+      name: 'Venice Beach',
+      coordinates: [33.9850, -118.4695],
       anchor: 'geo',
     },
     scs: 0.72,
@@ -387,8 +400,8 @@ export const mockTransactions: VerifiedTransaction[] = [
     pesDelta: 5.0,
     status: 'finalized',
     proofs: [
-      { type: 'gps', status: 'verified', timestamp: Date.now() - 24 * 60 * 60 * 1000, details: '34.0195, -118.4912' },
-      { type: 'device', status: 'verified', timestamp: Date.now() - 24 * 60 * 60 * 1000, details: 'Apple Watch S9 (attested)' },
+      { type: 'gps', status: 'verified', timestamp: Date.now() - 24 * 60 * 60 * 1000, details: '33.9850, -118.4695' },
+      { type: 'device', status: 'verified', timestamp: Date.now() - 24 * 60 * 60 * 1000, details: 'Apple Watch S11 (attested)' },
       { type: 'liveness', status: 'verified', timestamp: Date.now() - 24 * 60 * 60 * 1000, details: 'Biometric verified' },
     ],
     chainOfCustody: [
@@ -396,44 +409,45 @@ export const mockTransactions: VerifiedTransaction[] = [
       { timestamp: Date.now() - 24 * 60 * 60 * 1000 + 30 * 60 * 1000, event: 'Session terminated', type: 'user_action' },
       { timestamp: Date.now() - 24 * 60 * 60 * 1000 + 30 * 60 * 1000 + 23000, event: 'Liveness check', type: 'biometric_passed' },
     ],
-    merkleRoot: generateMerkleRoot(),
+    merkleRoot: generateMerkleRoot('3b8e1d'),
   },
   {
     id: '2c9f0e',
     uid: 'demo-user-01',
     timestamp: Date.now() - 24 * 60 * 60 * 1000 - 10 * 60 * 60 * 1000,
-    type: 'Combat Training',
-    duration: 45,
+    type: 'Jiu-Jitsu',
+    duration: 60,
     zone: 'Z4',
     location: {
-      name: 'Home Gym',
-      coordinates: [33.9950, -118.4600],
-      anchor: 'wifi',
+      name: 'Gracie Originals',
+      coordinates: [33.9912, -118.4521],
+      anchor: 'nfc',
     },
     scs: 0.91,
     gate: 'auto',
-    pesDelta: 7.0,
+    pesDelta: 8.5,
     status: 'finalized',
     proofs: [
-      { type: 'wifi', status: 'verified', timestamp: Date.now() - 24 * 60 * 60 * 1000, details: 'Home network matched' },
+      { type: 'nfc', status: 'verified', timestamp: Date.now() - 24 * 60 * 60 * 1000, details: 'Gracie Originals NFC verified' },
       { type: 'device', status: 'verified', timestamp: Date.now() - 24 * 60 * 60 * 1000, details: 'WHOOP 4.0 (attested)' },
       { type: 'congruency', status: 'verified', timestamp: Date.now() - 24 * 60 * 60 * 1000, details: 'Score: 0.91' },
     ],
     chainOfCustody: [
-      { timestamp: Date.now() - 24 * 60 * 60 * 1000, event: 'Session initiated', type: 'wifi_anchor' },
-      { timestamp: Date.now() - 24 * 60 * 60 * 1000 + 45 * 60 * 1000, event: 'Session terminated', type: 'user_action' },
+      { timestamp: Date.now() - 24 * 60 * 60 * 1000, event: 'Session initiated', type: 'nfc_anchor' },
+      { timestamp: Date.now() - 24 * 60 * 60 * 1000 + 60 * 60 * 1000, event: 'Session terminated', type: 'user_action' },
     ],
-    merkleRoot: generateMerkleRoot(),
+    merkleRoot: generateMerkleRoot('2c9f0e'),
   },
   {
     id: '1d0a2b',
     uid: 'demo-user-01',
     timestamp: Date.now() - 24 * 60 * 60 * 1000 - 16 * 60 * 60 * 1000,
-    type: 'Martial Arts',
+    type: 'Boxing',
     duration: 55,
-    zone: 'Z3',
+    zone: 'Z4',
     location: {
-      name: 'Unknown',
+      name: 'JFM Boxing',
+      coordinates: [33.9780, -118.4450],
       anchor: 'geo',
     },
     scs: 0.38,
@@ -442,7 +456,7 @@ export const mockTransactions: VerifiedTransaction[] = [
     status: 'finalized',
     proofs: [
       { type: 'gps', status: 'failed', timestamp: Date.now() - 24 * 60 * 60 * 1000, details: 'Location not verified' },
-      { type: 'device', status: 'verified', timestamp: Date.now() - 24 * 60 * 60 * 1000, details: 'Apple Watch S9' },
+      { type: 'device', status: 'verified', timestamp: Date.now() - 24 * 60 * 60 * 1000, details: 'Apple Watch S11' },
       { type: 'congruency', status: 'pending', timestamp: Date.now() - 24 * 60 * 60 * 1000, details: 'Insufficient data' },
     ],
     chainOfCustody: [
@@ -450,7 +464,170 @@ export const mockTransactions: VerifiedTransaction[] = [
       { timestamp: Date.now() - 24 * 60 * 60 * 1000 + 55 * 60 * 1000, event: 'Session terminated', type: 'user_action' },
       { timestamp: Date.now() - 24 * 60 * 60 * 1000 + 55 * 60 * 1000 + 5000, event: 'Gate determined', type: 'QUARANTINE' },
     ],
-    merkleRoot: generateMerkleRoot(),
+    merkleRoot: generateMerkleRoot('1d0a2b'),
+  },
+  {
+    id: '5e8f3a',
+    uid: 'demo-user-01',
+    timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000,
+    type: 'Swimming',
+    duration: 45,
+    zone: 'Z2',
+    location: {
+      name: 'Venice Beach Ocean',
+      coordinates: [33.9855, -118.4732],
+      anchor: 'geo',
+    },
+    scs: 0.68,
+    gate: 'confirm',
+    pesDelta: 4.5,
+    status: 'finalized',
+    proofs: [
+      { type: 'gps', status: 'verified', timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000, details: '33.9855, -118.4732' },
+      { type: 'device', status: 'verified', timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000, details: 'Apple Watch S11 (attested)' },
+      { type: 'liveness', status: 'verified', timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000, details: 'Biometric verified' },
+    ],
+    chainOfCustody: [
+      { timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000, event: 'Session initiated', type: 'geo_anchor' },
+      { timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000 + 45 * 60 * 1000, event: 'Session terminated', type: 'user_action' },
+    ],
+    merkleRoot: generateMerkleRoot('5e8f3a'),
+  },
+  {
+    id: '6f9g4b',
+    uid: 'demo-user-01',
+    timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000 - 8 * 60 * 60 * 1000,
+    type: 'Cycling',
+    duration: 65,
+    zone: 'Z3',
+    location: {
+      name: 'Venice Bike Path',
+      coordinates: [33.9901, -118.4688],
+      anchor: 'geo',
+    },
+    scs: 0.75,
+    gate: 'confirm',
+    pesDelta: 6.0,
+    status: 'finalized',
+    proofs: [
+      { type: 'gps', status: 'verified', timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000, details: 'Route tracked 18.5km' },
+      { type: 'device', status: 'verified', timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000, details: 'Apple Watch S11 (attested)' },
+      { type: 'congruency', status: 'verified', timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000, details: 'Score: 0.75' },
+    ],
+    chainOfCustody: [
+      { timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000, event: 'Session initiated', type: 'geo_anchor' },
+      { timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000 + 65 * 60 * 1000, event: 'Session terminated', type: 'user_action' },
+    ],
+    merkleRoot: generateMerkleRoot('6f9g4b'),
+  },
+  {
+    id: '7h0i5c',
+    uid: 'demo-user-01',
+    timestamp: Date.now() - 3 * 24 * 60 * 60 * 1000,
+    type: 'Resistance Training',
+    duration: 75,
+    zone: 'Z3',
+    location: {
+      name: "Gold's Gym Venice",
+      coordinates: [33.9871, -118.4682],
+      anchor: 'nfc',
+    },
+    scs: 0.96,
+    gate: 'auto',
+    pesDelta: 8.0,
+    status: 'finalized',
+    proofs: [
+      { type: 'nfc', status: 'verified', timestamp: Date.now() - 3 * 24 * 60 * 60 * 1000, details: 'NFC anchor verified' },
+      { type: 'gps', status: 'verified', timestamp: Date.now() - 3 * 24 * 60 * 60 * 1000, details: '33.9871, -118.4682 (within 8m)' },
+      { type: 'device', status: 'verified', timestamp: Date.now() - 3 * 24 * 60 * 60 * 1000, details: 'Apple Watch S11 (attested)' },
+      { type: 'congruency', status: 'verified', timestamp: Date.now() - 3 * 24 * 60 * 60 * 1000, details: 'Score: 0.96' },
+    ],
+    chainOfCustody: [
+      { timestamp: Date.now() - 3 * 24 * 60 * 60 * 1000, event: 'Session initiated', type: 'anchor_verified' },
+      { timestamp: Date.now() - 3 * 24 * 60 * 60 * 1000 + 75 * 60 * 1000, event: 'Session terminated', type: 'user_action' },
+    ],
+    merkleRoot: generateMerkleRoot('7h0i5c'),
+  },
+  {
+    id: '8i1j6d',
+    uid: 'demo-user-01',
+    timestamp: Date.now() - 4 * 24 * 60 * 60 * 1000,
+    type: 'Running',
+    duration: 35,
+    zone: 'Z3',
+    location: {
+      name: 'Venice Boardwalk',
+      coordinates: [33.9862, -118.4712],
+      anchor: 'geo',
+    },
+    scs: 0.82,
+    gate: 'auto',
+    pesDelta: 5.5,
+    status: 'finalized',
+    proofs: [
+      { type: 'gps', status: 'verified', timestamp: Date.now() - 4 * 24 * 60 * 60 * 1000, details: 'Route tracked 5.2km' },
+      { type: 'device', status: 'verified', timestamp: Date.now() - 4 * 24 * 60 * 60 * 1000, details: 'Apple Watch S11 (attested)' },
+      { type: 'congruency', status: 'verified', timestamp: Date.now() - 4 * 24 * 60 * 60 * 1000, details: 'Score: 0.82' },
+    ],
+    chainOfCustody: [
+      { timestamp: Date.now() - 4 * 24 * 60 * 60 * 1000, event: 'Session initiated', type: 'geo_anchor' },
+      { timestamp: Date.now() - 4 * 24 * 60 * 60 * 1000 + 35 * 60 * 1000, event: 'Session terminated', type: 'user_action' },
+    ],
+    merkleRoot: generateMerkleRoot('8i1j6d'),
+  },
+  {
+    id: '9j2k7e',
+    uid: 'demo-user-01',
+    timestamp: Date.now() - 5 * 24 * 60 * 60 * 1000,
+    type: 'Jiu-Jitsu',
+    duration: 90,
+    zone: 'Z4',
+    location: {
+      name: 'Gracie Originals',
+      coordinates: [33.9912, -118.4521],
+      anchor: 'nfc',
+    },
+    scs: 0.93,
+    gate: 'auto',
+    pesDelta: 9.5,
+    status: 'finalized',
+    proofs: [
+      { type: 'nfc', status: 'verified', timestamp: Date.now() - 5 * 24 * 60 * 60 * 1000, details: 'Gracie Originals NFC verified' },
+      { type: 'device', status: 'verified', timestamp: Date.now() - 5 * 24 * 60 * 60 * 1000, details: 'WHOOP 4.0 (attested)' },
+      { type: 'congruency', status: 'verified', timestamp: Date.now() - 5 * 24 * 60 * 60 * 1000, details: 'Score: 0.93' },
+    ],
+    chainOfCustody: [
+      { timestamp: Date.now() - 5 * 24 * 60 * 60 * 1000, event: 'Session initiated', type: 'nfc_anchor' },
+      { timestamp: Date.now() - 5 * 24 * 60 * 60 * 1000 + 90 * 60 * 1000, event: 'Session terminated', type: 'user_action' },
+    ],
+    merkleRoot: generateMerkleRoot('9j2k7e'),
+  },
+  {
+    id: '0k3l8f',
+    uid: 'demo-user-01',
+    timestamp: Date.now() - 6 * 24 * 60 * 60 * 1000,
+    type: 'HIIT',
+    duration: 40,
+    zone: 'Z5',
+    location: {
+      name: "Gold's Gym Venice",
+      coordinates: [33.9871, -118.4682],
+      anchor: 'nfc',
+    },
+    scs: 0.89,
+    gate: 'auto',
+    pesDelta: 7.5,
+    status: 'finalized',
+    proofs: [
+      { type: 'nfc', status: 'verified', timestamp: Date.now() - 6 * 24 * 60 * 60 * 1000, details: 'NFC anchor verified' },
+      { type: 'device', status: 'verified', timestamp: Date.now() - 6 * 24 * 60 * 60 * 1000, details: 'Apple Watch S11 (attested)' },
+      { type: 'congruency', status: 'verified', timestamp: Date.now() - 6 * 24 * 60 * 60 * 1000, details: 'Score: 0.89' },
+    ],
+    chainOfCustody: [
+      { timestamp: Date.now() - 6 * 24 * 60 * 60 * 1000, event: 'Session initiated', type: 'anchor_verified' },
+      { timestamp: Date.now() - 6 * 24 * 60 * 60 * 1000 + 40 * 60 * 1000, event: 'Session terminated', type: 'user_action' },
+    ],
+    merkleRoot: generateMerkleRoot('0k3l8f'),
   },
 ];
 
@@ -535,9 +712,9 @@ export const mockEquityStatements: EquityStatement[] = [
     id: 'stmt-2026-01',
     month: 1,
     year: 2026,
-    totalSessions: 18,
-    totalPesGenerated: 142,
-    assetAppreciation: 4.7,
+    totalSessions: 12,
+    totalPesGenerated: 47,
+    assetAppreciation: 4.2,
     consistencyScore: 94,
     volatilityIndex: 'Low',
     status: 'Pending',
@@ -547,9 +724,9 @@ export const mockEquityStatements: EquityStatement[] = [
     id: 'stmt-2025-12',
     month: 12,
     year: 2025,
-    totalSessions: 22,
-    totalPesGenerated: 168,
-    assetAppreciation: 5.2,
+    totalSessions: 15,
+    totalPesGenerated: 52,
+    assetAppreciation: 5.1,
     consistencyScore: 96,
     volatilityIndex: 'Low',
     status: 'Audited',
@@ -559,13 +736,25 @@ export const mockEquityStatements: EquityStatement[] = [
     id: 'stmt-2025-11',
     month: 11,
     year: 2025,
-    totalSessions: 19,
-    totalPesGenerated: 145,
+    totalSessions: 6,
+    totalPesGenerated: 18,
+    assetAppreciation: -2.4,
+    consistencyScore: 58,
+    volatilityIndex: 'High',
+    status: 'Audited',
+    generatedAt: Date.now() - 60 * 24 * 60 * 60 * 1000,
+  },
+  {
+    id: 'stmt-2025-10',
+    month: 10,
+    year: 2025,
+    totalSessions: 14,
+    totalPesGenerated: 45,
     assetAppreciation: 3.8,
     consistencyScore: 91,
     volatilityIndex: 'Low',
     status: 'Audited',
-    generatedAt: Date.now() - 60 * 24 * 60 * 60 * 1000,
+    generatedAt: Date.now() - 90 * 24 * 60 * 60 * 1000,
   },
 ];
 
@@ -574,7 +763,7 @@ export const mockEquityStatements: EquityStatement[] = [
 // ============================================
 
 export const mockZoneDistribution = [
-  { zone: 'Z1' as HRZone, percentage: 12, minutes: 156, color: '#4FC3F7' },
+  { zone: 'Z1' as HRZone, percentage: 12, minutes: 156, color: '#C0C0C0' },  // Silver
   { zone: 'Z2' as HRZone, percentage: 34, minutes: 442, color: '#81C784' },
   { zone: 'Z3' as HRZone, percentage: 38, minutes: 494, color: '#FFD54F' },
   { zone: 'Z4' as HRZone, percentage: 12, minutes: 156, color: '#FF8A65' },
@@ -602,3 +791,93 @@ export const generateWeeklyTrends = (weeks: number = 12) => {
 
   return trends;
 };
+
+// ============================================
+// PERFORMANCE EQUITY BALANCE
+// ============================================
+
+/**
+ * Calculate PE (Performance Equity) balance from transactions
+ * PE is the redeemable currency, NOT the PES score
+ */
+export const calculatePEBalance = (transactions: VerifiedTransaction[]): PEBalance => {
+  const now = Date.now();
+  const SETTLEMENT_WINDOW = 48 * 60 * 60 * 1000; // 48 hours for settlement
+
+  let available = 0;
+  let pending = 0;
+  let underReview = 0;
+  let pendingSessions = 0;
+  let reviewSessions = 0;
+
+  // Also add historical PE from equity statements (older months)
+  const historicalPE = mockEquityStatements
+    .filter(stmt => stmt.status === 'Audited')
+    .reduce((sum, stmt) => sum + stmt.totalPesGenerated, 0);
+
+  for (const tx of transactions) {
+    const age = now - tx.timestamp;
+
+    if (tx.gate === 'quarantine') {
+      // Quarantined sessions have estimated value (calculate from duration/zone)
+      const estimatedValue = Math.round((tx.duration / 60) * 5 * 10) / 10; // ~5 PE per hour
+      underReview += estimatedValue;
+      reviewSessions++;
+    } else if (age < SETTLEMENT_WINDOW && tx.gate === 'confirm') {
+      // Recent CONFIRM gate sessions are still settling
+      pending += tx.pesDelta;
+      pendingSessions++;
+    } else {
+      // All other finalized sessions are available
+      available += tx.pesDelta;
+    }
+  }
+
+  // Add historical PE to available
+  available += historicalPE;
+
+  return {
+    available: Math.round(available * 10) / 10,
+    pending: Math.round(pending * 10) / 10,
+    underReview: Math.round(underReview * 10) / 10,
+    total: Math.round((available + pending + underReview) * 10) / 10,
+    pendingSessions,
+    reviewSessions,
+  };
+};
+
+/**
+ * Get recent PE transactions for the ledger display
+ */
+export const getRecentPETransactions = (transactions: VerifiedTransaction[]): PETransaction[] => {
+  const now = Date.now();
+  const SETTLEMENT_WINDOW = 48 * 60 * 60 * 1000;
+
+  return transactions.slice(0, 6).map(tx => {
+    const age = now - tx.timestamp;
+    let status: PETransaction['status'];
+    let amount = tx.pesDelta;
+
+    if (tx.gate === 'quarantine') {
+      status = 'review';
+      amount = Math.round((tx.duration / 60) * 5 * 10) / 10; // Estimated
+    } else if (age < SETTLEMENT_WINDOW && tx.gate === 'confirm') {
+      status = 'settling';
+    } else {
+      status = 'settled';
+    }
+
+    return {
+      id: tx.id,
+      date: tx.timestamp,
+      type: tx.type,
+      amount,
+      status,
+      gate: tx.gate,
+    };
+  });
+};
+
+// Pre-calculated balance for mock data
+export const mockPEBalance = calculatePEBalance(mockTransactions);
+export const mockRecentPETransactions = getRecentPETransactions(mockTransactions);

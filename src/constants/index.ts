@@ -61,7 +61,7 @@ export const COLORS = {
 
   // HR Zones
   zones: {
-    Z1: '#4FC3F7',
+    Z1: '#C0C0C0',  // Silver for Recovery
     Z2: '#81C784',
     Z3: '#FFD54F',
     Z4: '#FF8A65',
@@ -129,9 +129,9 @@ export const TRUST_TIERS: Record<TrustTier, { min: number; minScore: number; mul
 
 export const LAYER_NAMES: Record<LayerNumber, { name: string; shortName: string }> = {
   1: { name: 'GAVL SESSION ANCHORING', shortName: 'GAVL' },
-  2: { name: 'AI CONGRUENCY ENGINE', shortName: 'AI CONG' },
-  3: { name: 'DEVICE ATTESTATION', shortName: 'DEV ATT' },
-  4: { name: 'TRUST INDEX', shortName: 'TRUST' },
+  2: { name: 'AI CONGRUENCY ENGINE', shortName: 'ACE' },
+  3: { name: 'DEVICE ATTESTATION', shortName: 'DEVA' },
+  4: { name: 'TRUST INDEX', shortName: 'TRUDEX' },
   5: { name: 'AUDIT & LIVENESS', shortName: 'AUDIT' },
 };
 

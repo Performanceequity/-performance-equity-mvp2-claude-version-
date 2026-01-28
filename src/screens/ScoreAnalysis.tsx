@@ -3,7 +3,7 @@
  * Detailed PES analysis with factors, history, and percentile ranking
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -31,6 +31,8 @@ export function ScoreAnalysis({
   history,
   onNavigate,
 }: ScoreAnalysisProps) {
+  const [showProjection, setShowProjection] = useState(false);
+
   // Format history for chart
   const chartData = useMemo(() => {
     return history.map((entry) => ({
@@ -278,7 +280,7 @@ export function ScoreAnalysis({
         {/* Score Projection */}
         <section>
           <button
-            onClick={() => {/* TODO: Navigate to projection model */}}
+            onClick={() => setShowProjection(true)}
             className="w-full p-4 rounded-lg border text-center transition-all hover:border-opacity-60"
             style={{
               backgroundColor: COLORS.surface,
@@ -300,6 +302,199 @@ export function ScoreAnalysis({
           </button>
         </section>
       </main>
+
+      {/* Score Projection Modal */}
+      {showProjection && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.85)' }}
+        >
+          <div
+            className="w-full max-w-lg p-6 rounded-lg border max-h-[90vh] overflow-y-auto"
+            style={{
+              backgroundColor: COLORS.surface,
+              borderColor: COLORS.border,
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3
+                className="text-lg font-mono font-bold"
+                style={{ color: COLORS.textPrimary }}
+              >
+                SCORE PROJECTION MODEL
+              </h3>
+              <button
+                onClick={() => setShowProjection(false)}
+                className="text-lg"
+                style={{ color: COLORS.textMuted }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p
+              className="text-xs font-mono mb-6"
+              style={{ color: COLORS.textMuted }}
+            >
+              Simulate how different actions would impact your Performance Equity Score over the next 30 days.
+            </p>
+
+            {/* Current Score */}
+            <div
+              className="p-4 rounded-lg mb-6"
+              style={{ backgroundColor: COLORS.background }}
+            >
+              <p className="text-xs font-mono mb-1" style={{ color: COLORS.textMuted }}>
+                CURRENT SCORE
+              </p>
+              <p className="text-3xl font-mono font-bold" style={{ color: COLORS.accent }}>
+                {score.value}
+              </p>
+            </div>
+
+            {/* Projection Scenarios */}
+            <div className="space-y-3 mb-6">
+              <h4
+                className="text-xs font-mono font-semibold uppercase tracking-wider"
+                style={{ color: COLORS.textSecondary }}
+              >
+                PROJECTED SCENARIOS
+              </h4>
+
+              <ProjectionScenario
+                label="Maintain Current Pace"
+                description="4 sessions/week, avg SCS 0.84"
+                projectedScore={score.value + 15}
+                projectedDelta={15}
+                currentScore={score.value}
+              />
+
+              <ProjectionScenario
+                label="Increase to 5 Sessions/Week"
+                description="Higher frequency, same quality"
+                projectedScore={score.value + 28}
+                projectedDelta={28}
+                currentScore={score.value}
+              />
+
+              <ProjectionScenario
+                label="Use Closed Anchors Only"
+                description="NFC/BLE verification, higher SCS"
+                projectedScore={score.value + 35}
+                projectedDelta={35}
+                currentScore={score.value}
+              />
+
+              <ProjectionScenario
+                label="Reduced Activity"
+                description="2 sessions/week"
+                projectedScore={score.value - 20}
+                projectedDelta={-20}
+                currentScore={score.value}
+                isNegative
+              />
+            </div>
+
+            {/* Factor Impact */}
+            <div className="space-y-3 mb-6">
+              <h4
+                className="text-xs font-mono font-semibold uppercase tracking-wider"
+                style={{ color: COLORS.textSecondary }}
+              >
+                HIGHEST IMPACT FACTORS
+              </h4>
+              <div className="space-y-2">
+                {factors.slice(0, 3).map((factor) => (
+                  <div
+                    key={factor.id}
+                    className="flex items-center justify-between text-xs font-mono p-2 rounded"
+                    style={{ backgroundColor: COLORS.background }}
+                  >
+                    <span style={{ color: COLORS.textPrimary }}>{factor.name}</span>
+                    <span style={{ color: COLORS.accent }}>
+                      {factor.weight}% weight
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowProjection(false)}
+              className="w-full py-3 rounded-lg font-mono text-sm font-semibold"
+              style={{
+                backgroundColor: COLORS.accent,
+                color: COLORS.background,
+              }}
+            >
+              CLOSE PROJECTION
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * ProjectionScenario - Single projection scenario display
+ */
+function ProjectionScenario({
+  label,
+  description,
+  projectedScore,
+  projectedDelta,
+  currentScore,
+  isNegative = false,
+}: {
+  label: string;
+  description: string;
+  projectedScore: number;
+  projectedDelta: number;
+  currentScore: number;
+  isNegative?: boolean;
+}) {
+  const percentChange = ((projectedDelta / currentScore) * 100).toFixed(1);
+
+  return (
+    <div
+      className="p-3 rounded-lg"
+      style={{ backgroundColor: COLORS.background }}
+    >
+      <div className="flex items-start justify-between mb-2">
+        <div>
+          <p className="text-sm font-mono font-semibold" style={{ color: COLORS.textPrimary }}>
+            {label}
+          </p>
+          <p className="text-xs font-mono" style={{ color: COLORS.textMuted }}>
+            {description}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-lg font-mono font-bold" style={{ color: COLORS.textPrimary }}>
+            {Math.max(0, Math.min(999, projectedScore))}
+          </p>
+          <p
+            className="text-xs font-mono"
+            style={{ color: isNegative ? COLORS.error : COLORS.success }}
+          >
+            {isNegative ? '' : '+'}{projectedDelta} ({isNegative ? '' : '+'}{percentChange}%)
+          </p>
+        </div>
+      </div>
+      {/* Progress indicator */}
+      <div
+        className="h-1 rounded-full overflow-hidden"
+        style={{ backgroundColor: COLORS.border }}
+      >
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${(Math.max(0, Math.min(999, projectedScore)) / 999) * 100}%`,
+            backgroundColor: isNegative ? COLORS.error : COLORS.success,
+          }}
+        />
+      </div>
     </div>
   );
 }

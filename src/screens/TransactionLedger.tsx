@@ -27,6 +27,27 @@ export function TransactionLedger({
   const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Liveness check state
+  const [livenessModal, setLivenessModal] = useState<{
+    show: boolean;
+    transactionId: string | null;
+    phase: 'scanning' | 'success';
+  }>({ show: false, transactionId: null, phase: 'scanning' });
+  const [appealedTransactions, setAppealedTransactions] = useState<Set<string>>(new Set());
+
+  const handleAppealLiveness = (transactionId: string) => {
+    setLivenessModal({ show: true, transactionId, phase: 'scanning' });
+    // Simulate face scan taking 3 seconds
+    setTimeout(() => {
+      setLivenessModal({ show: true, transactionId, phase: 'success' });
+      // After showing success for 2 seconds, close and mark as appealed
+      setTimeout(() => {
+        setAppealedTransactions(prev => new Set(prev).add(transactionId));
+        setLivenessModal({ show: false, transactionId: null, phase: 'scanning' });
+      }, 2000);
+    }, 3000);
+  };
+
   // Get unique activity types
   const activityTypes = useMemo(() => {
     const types = new Set(transactions.map((t) => t.type));
@@ -100,6 +121,173 @@ export function TransactionLedger({
 
   return (
     <div className="min-h-screen pb-20" style={{ backgroundColor: COLORS.background }}>
+      {/* Liveness Check Modal */}
+      {livenessModal.show && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.95)' }}
+        >
+          <div className="w-full max-w-sm mx-4">
+            {livenessModal.phase === 'scanning' ? (
+              <>
+                {/* Camera Frame */}
+                <div className="relative mb-6">
+                  {/* Simulated camera view */}
+                  <div
+                    className="w-64 h-64 mx-auto rounded-full relative overflow-hidden"
+                    style={{
+                      background: `radial-gradient(circle, ${COLORS.surface} 0%, ${COLORS.background} 100%)`,
+                      boxShadow: `0 0 60px ${COLORS.accent}30`,
+                    }}
+                  >
+                    {/* Face outline */}
+                    <svg
+                      className="absolute inset-0 w-full h-full animate-pulse"
+                      viewBox="0 0 100 100"
+                    >
+                      <ellipse
+                        cx="50"
+                        cy="45"
+                        rx="25"
+                        ry="32"
+                        fill="none"
+                        stroke={COLORS.accent}
+                        strokeWidth="1"
+                        strokeDasharray="4 2"
+                      />
+                      {/* Eyes */}
+                      <circle cx="40" cy="40" r="3" fill={COLORS.accent} opacity="0.5" />
+                      <circle cx="60" cy="40" r="3" fill={COLORS.accent} opacity="0.5" />
+                      {/* Mouth */}
+                      <path
+                        d="M 40 55 Q 50 62 60 55"
+                        fill="none"
+                        stroke={COLORS.accent}
+                        strokeWidth="1"
+                        opacity="0.5"
+                      />
+                    </svg>
+
+                    {/* Scanning line animation */}
+                    <div
+                      className="absolute left-0 right-0 h-1 animate-[scan_2s_ease-in-out_infinite]"
+                      style={{
+                        background: `linear-gradient(90deg, transparent, ${COLORS.accent}, transparent)`,
+                        top: '30%',
+                      }}
+                    />
+                  </div>
+
+                  {/* Corner brackets */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 pointer-events-none">
+                    <div
+                      className="absolute top-0 left-0 w-8 h-8 border-l-2 border-t-2"
+                      style={{ borderColor: COLORS.accent }}
+                    />
+                    <div
+                      className="absolute top-0 right-0 w-8 h-8 border-r-2 border-t-2"
+                      style={{ borderColor: COLORS.accent }}
+                    />
+                    <div
+                      className="absolute bottom-0 left-0 w-8 h-8 border-l-2 border-b-2"
+                      style={{ borderColor: COLORS.accent }}
+                    />
+                    <div
+                      className="absolute bottom-0 right-0 w-8 h-8 border-r-2 border-b-2"
+                      style={{ borderColor: COLORS.accent }}
+                    />
+                  </div>
+                </div>
+
+                {/* Instructions */}
+                <div className="text-center">
+                  <h3
+                    className="text-lg font-mono font-bold mb-2"
+                    style={{ color: COLORS.textPrimary }}
+                  >
+                    LIVENESS CHECK
+                  </h3>
+                  <p
+                    className="text-sm font-mono mb-4"
+                    style={{ color: COLORS.textSecondary }}
+                  >
+                    Position your face in the frame
+                  </p>
+                  <div className="flex items-center justify-center gap-2">
+                    <div
+                      className="w-2 h-2 rounded-full animate-pulse"
+                      style={{ backgroundColor: COLORS.accent }}
+                    />
+                    <span
+                      className="text-xs font-mono uppercase tracking-widest"
+                      style={{ color: COLORS.accent }}
+                    >
+                      Scanning...
+                    </span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Success State */}
+                <div className="text-center">
+                  <div
+                    className="w-32 h-32 mx-auto rounded-full flex items-center justify-center mb-6"
+                    style={{
+                      backgroundColor: COLORS.success + '20',
+                      boxShadow: `0 0 60px ${COLORS.success}40`,
+                    }}
+                  >
+                    <svg
+                      width="64"
+                      height="64"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke={COLORS.success}
+                      strokeWidth="2"
+                      className="animate-[checkmark_0.5s_ease-in-out]"
+                    >
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  </div>
+
+                  <h3
+                    className="text-xl font-mono font-bold mb-2"
+                    style={{ color: COLORS.success }}
+                  >
+                    LIVENESS VERIFIED
+                  </h3>
+                  <p
+                    className="text-sm font-mono mb-2"
+                    style={{ color: COLORS.textSecondary }}
+                  >
+                    Identity confirmed via facial recognition
+                  </p>
+                  <p
+                    className="text-xs font-mono"
+                    style={{ color: COLORS.textMuted }}
+                  >
+                    Session upgraded to CONFIRMED
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Scanning animation keyframes */}
+      <style>{`
+        @keyframes scan {
+          0%, 100% { top: 20%; opacity: 0.3; }
+          50% { top: 70%; opacity: 1; }
+        }
+        @keyframes checkmark {
+          0% { stroke-dashoffset: 50; }
+          100% { stroke-dashoffset: 0; }
+        }
+      `}</style>
+
       {/* Header */}
       <header
         className="sticky top-0 z-40 px-4 py-3 border-b"
@@ -291,6 +479,8 @@ export function TransactionLedger({
                 transaction={tx}
                 expanded={expandedId === tx.id}
                 onToggle={() => setExpandedId(expandedId === tx.id ? null : tx.id)}
+                onAppealLiveness={handleAppealLiveness}
+                isAppealed={appealedTransactions.has(tx.id)}
               />
             ))}
           </section>

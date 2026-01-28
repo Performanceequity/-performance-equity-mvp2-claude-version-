@@ -311,6 +311,9 @@ export interface SystemHealth {
 // ============================================
 
 export type ViewType =
+  | 'splash'
+  | 'login'
+  | 'onboarding'
   | 'overview'
   | 'score'
   | 'protocol'
@@ -322,7 +325,10 @@ export type ViewType =
   | 'initiate'
   | 'active'
   | 'trust'
-  | 'login';
+  | 'connect-devices'
+  | 'settings'
+  | 'equity-statements'
+  | 'redeem';
 
 export interface AppState {
   currentView: ViewType;
@@ -349,19 +355,29 @@ export interface EquityStatement {
 }
 
 // ============================================
-// SYNDICATE TYPES
+// PERFORMANCE EQUITY BALANCE TYPES
 // ============================================
 
-export interface Syndicate {
+/**
+ * PES = Performance Equity Score (0-999) - Your rating, like FICO
+ * PE = Performance Equity - The actual credits you earn and redeem
+ */
+export interface PEBalance {
+  available: number;        // Fully verified, redeemable now
+  pending: number;          // Recent sessions, settling (T+2)
+  underReview: number;      // Quarantined sessions, at risk
+  total: number;            // Sum of all
+  pendingSessions: number;  // Count of sessions pending
+  reviewSessions: number;   // Count of sessions under review
+}
+
+export interface PETransaction {
   id: string;
-  name: string;
-  description: string;
-  minTier: TrustTier;
-  minPes: number;
-  members: number;
-  avgYield: number;
-  isMember: boolean;
-  locked: boolean;
+  date: number;
+  type: string;
+  amount: number;
+  status: 'settled' | 'settling' | 'review';
+  gate: GateType;
 }
 
 // ============================================

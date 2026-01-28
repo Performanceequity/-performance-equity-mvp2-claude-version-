@@ -153,6 +153,13 @@ interface LayerStatusBarProps {
 export function LayerStatusBar({ layers }: LayerStatusBarProps) {
   const sortedLayers = [...layers].sort((a, b) => a.layer - b.layer);
 
+  // Get color for layer - GAVL (layer 1) is gold, others are green
+  const getLayerColor = (layer: number, status: string) => {
+    if (status === 'error') return COLORS.error;
+    if (status === 'warning') return COLORS.warning;
+    return layer === 1 ? COLORS.accent : COLORS.success; // GAVL = gold, others = green
+  };
+
   return (
     <div
       className="grid grid-cols-5 rounded-lg overflow-hidden border"
@@ -161,33 +168,35 @@ export function LayerStatusBar({ layers }: LayerStatusBarProps) {
         borderColor: COLORS.border,
       }}
     >
-      {sortedLayers.map((layer) => (
-        <div
-          key={layer.layer}
-          className="p-3 text-center border-r last:border-r-0"
-          style={{ borderColor: COLORS.border }}
-        >
-          <div className="flex justify-center mb-1">
-            <StatusIndicator status={layer.status} size="md" pulse />
-          </div>
+      {sortedLayers.map((layer) => {
+        const layerColor = getLayerColor(layer.layer, layer.status);
+        return (
           <div
-            className="text-[10px] font-mono font-semibold tracking-wider"
-            style={{ color: COLORS.textSecondary }}
+            key={layer.layer}
+            className="p-3 text-center border-r last:border-r-0"
+            style={{ borderColor: COLORS.border }}
           >
-            {layer.shortName}
+            <div className="flex justify-center mb-1">
+              <div
+                className="w-3 h-3 rounded-full animate-pulse"
+                style={{ backgroundColor: layerColor }}
+              />
+            </div>
+            <div
+              className="text-[10px] font-mono font-semibold tracking-wider"
+              style={{ color: COLORS.textSecondary }}
+            >
+              {layer.shortName}
+            </div>
+            <div
+              className="text-[10px] font-mono mt-0.5"
+              style={{ color: layerColor }}
+            >
+              {layer.statusLabel}
+            </div>
           </div>
-          <div
-            className="text-[10px] font-mono mt-0.5"
-            style={{
-              color: layer.status === 'error' ? COLORS.error :
-                     layer.status === 'warning' ? COLORS.warning :
-                     COLORS.success
-            }}
-          >
-            {layer.statusLabel}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

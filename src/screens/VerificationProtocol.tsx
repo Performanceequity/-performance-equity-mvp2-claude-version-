@@ -211,12 +211,14 @@ export function VerificationProtocol({
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: COLORS.surfaceElevated,
+                      backgroundColor: COLORS.background,
                       border: `1px solid ${COLORS.border}`,
                       borderRadius: 4,
                       fontFamily: 'monospace',
                       fontSize: 12,
                     }}
+                    labelStyle={{ color: COLORS.textPrimary }}
+                    itemStyle={{ color: COLORS.textPrimary }}
                   />
                 </PieChart>
               </ResponsiveContainer>

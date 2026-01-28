@@ -252,13 +252,14 @@ export function PerformanceMetrics({
               label="SESSIONS"
               value={weeklyMetrics.sessions}
               goal={weeklyMetrics.sessionsGoal}
-              color={COLORS.success}
+              color={COLORS.accent}
             />
             <MetricRing
               label="AVG SCS"
               value={weeklyMetrics.avgScs}
               goal={weeklyMetrics.scsTarget}
-              color={COLORS.info}
+              max={1.0}
+              color={COLORS.accent}
               isDecimal
             />
           </div>
@@ -352,10 +353,19 @@ export function PerformanceMetrics({
             <div className="flex items-center gap-1">
               <div
                 className="w-3 h-3 rounded-sm"
+                style={{ backgroundColor: COLORS.zones.Z3 + '60' }}
+              />
+              <span className="text-xs font-mono" style={{ color: COLORS.textMuted }}>
+                Z3
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div
+                className="w-3 h-3 rounded-sm"
                 style={{ backgroundColor: COLORS.zones.Z5 + '80' }}
               />
               <span className="text-xs font-mono" style={{ color: COLORS.textMuted }}>
-                Z3-Z5
+                Z4-Z5
               </span>
             </div>
           </div>
@@ -448,14 +458,16 @@ export function PerformanceMetrics({
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: COLORS.surfaceElevated,
+                    backgroundColor: '#0D0D0D',
                     border: `1px solid ${COLORS.border}`,
                     borderRadius: 4,
                     fontFamily: 'monospace',
                     fontSize: 12,
+                    color: COLORS.textPrimary,
                   }}
-                  labelStyle={{ color: COLORS.textSecondary }}
+                  labelStyle={{ color: COLORS.textPrimary }}
                   itemStyle={{ color: COLORS.accent }}
+                  cursor={{ fill: 'rgba(212, 175, 55, 0.1)' }}
                 />
                 <Bar dataKey="pesEarned" radius={[2, 2, 0, 0]}>
                   {weeklyTrends.map((_, index) => (
@@ -481,16 +493,20 @@ function MetricRing({
   label,
   value,
   goal,
+  max,
   color,
   isDecimal = false,
 }: {
   label: string;
   value: number;
   goal: number;
+  max?: number;
   color: string;
   isDecimal?: boolean;
 }) {
-  const percentage = Math.min((value / goal) * 100, 100);
+  // Use max for ring percentage if provided, otherwise use goal
+  const ringMax = max ?? goal;
+  const percentage = Math.min((value / ringMax) * 100, 100);
   const displayValue = isDecimal ? value.toFixed(2) : value;
   const displayGoal = isDecimal ? goal.toFixed(2) : goal;
 

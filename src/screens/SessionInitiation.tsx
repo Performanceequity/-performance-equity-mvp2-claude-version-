@@ -35,9 +35,11 @@ export function SessionInitiation({
   const [scanning, setScanning] = useState(true);
   const [selectedAnchor, setSelectedAnchor] = useState<AnchorType | null>(null);
   const [deviceReady, setDeviceReady] = useState(false);
+  const [scanningIndex, setScanningIndex] = useState(0);
+  const [scanDirection, setScanDirection] = useState<'up' | 'down'>('down');
 
-  // Simulated anchor detection
-  const [anchors] = useState<DetectedAnchor[]>([
+  // All anchors (some will be hidden after scanning)
+  const allAnchors: DetectedAnchor[] = [
     {
       type: 'nfc',
       name: "Gold's Gym Venice",
@@ -64,24 +66,54 @@ export function SessionInitiation({
       name: 'Current Location',
       signal: 'weak',
       confidence: 0.60,
-      available: true,
+      available: false, // This one won't be detected - 3 out of 4
     },
-  ]);
+  ];
+
+  // Only show detected anchors after scanning (3 out of 4)
+  const [anchors, setAnchors] = useState<DetectedAnchor[]>(allAnchors);
 
   // Simulated device status
   const [device] = useState<DeviceStatus>({
-    name: 'Apple Watch Series 9',
+    name: 'Apple Watch Series 11',
     attested: true,
     lastChallenge: 2300,
     teeVerified: true,
   });
 
-  // Simulate scanning animation
+  // Sequential scanning animation - wave up and down
+  useEffect(() => {
+    if (!scanning) return;
+
+    const interval = setInterval(() => {
+      setScanningIndex((prev) => {
+        if (scanDirection === 'down') {
+          if (prev >= 3) {
+            setScanDirection('up');
+            return 2;
+          }
+          return prev + 1;
+        } else {
+          if (prev <= 0) {
+            setScanDirection('down');
+            return 1;
+          }
+          return prev - 1;
+        }
+      });
+    }, 200); // Fast scanning
+
+    return () => clearInterval(interval);
+  }, [scanning, scanDirection]);
+
+  // Simulate scanning completion
   useEffect(() => {
     const timer = setTimeout(() => {
       setScanning(false);
       setDeviceReady(true);
-    }, 2000);
+      // Show only detected anchors (3 out of 4)
+      setAnchors(allAnchors.filter(a => a.available));
+    }, 3500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -163,8 +195,19 @@ export function SessionInitiation({
             {scanning && (
               <div className="flex items-center gap-2">
                 <StatusIndicator status="active" size="sm" pulse />
-                <span className="text-xs font-mono" style={{ color: COLORS.accent }}>
+                <span
+                  className="text-xs font-mono font-semibold animate-[fastPulse_0.4s_ease-in-out_infinite]"
+                  style={{ color: COLORS.accent }}
+                >
                   SCANNING...
+                </span>
+              </div>
+            )}
+            {!scanning && (
+              <div className="flex items-center gap-2">
+                <StatusIndicator status="active" size="sm" />
+                <span className="text-xs font-mono font-semibold" style={{ color: COLORS.success }}>
+                  {anchors.length} OF 4 DETECTED
                 </span>
               </div>
             )}
@@ -179,17 +222,27 @@ export function SessionInitiation({
           </p>
 
           <div className="space-y-3">
-            {anchors.map((anchor) => (
+            {(scanning ? allAnchors : anchors).map((anchor, index) => (
               <AnchorCard
                 key={anchor.type}
                 anchor={anchor}
                 selected={selectedAnchor === anchor.type}
-                onSelect={() => handleAnchorSelect(anchor.type)}
+                onSelect={() => !scanning && handleAnchorSelect(anchor.type)}
                 signalColor={getSignalColor(anchor.signal)}
                 prediction={getPredictedGate(anchor.confidence)}
+                isScanning={scanning && scanningIndex === index}
+                disabled={scanning}
+                detected={!scanning}
               />
             ))}
           </div>
+
+          <style>{`
+            @keyframes fastPulse {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0.3; }
+            }
+          `}</style>
         </section>
 
         {/* Device Attestation */}
@@ -388,20 +441,41 @@ function AnchorCard({
   onSelect,
   signalColor,
   prediction,
+  isScanning = false,
+  disabled = false,
+  detected = false,
 }: {
   anchor: DetectedAnchor;
   selected: boolean;
   onSelect: () => void;
   signalColor: string;
   prediction: { gate: string; color: string };
+  isScanning?: boolean;
+  disabled?: boolean;
+  detected?: boolean;
 }) {
   return (
     <button
       onClick={onSelect}
+      disabled={disabled}
       className="w-full p-4 rounded-lg border transition-all text-left"
       style={{
-        backgroundColor: selected ? COLORS.surfaceElevated : COLORS.background,
-        borderColor: selected ? COLORS.accent : COLORS.border,
+        backgroundColor: isScanning
+          ? COLORS.accent + '15'
+          : selected
+            ? COLORS.surfaceElevated
+            : detected
+              ? COLORS.success + '10'
+              : COLORS.background,
+        borderColor: isScanning
+          ? COLORS.accent
+          : selected
+            ? COLORS.accent
+            : detected
+              ? COLORS.success
+              : COLORS.border,
+        boxShadow: isScanning ? `0 0 20px ${COLORS.accent}30` : 'none',
+        opacity: disabled && !isScanning ? 0.7 : 1,
       }}
     >
       <div className="flex items-center justify-between">
@@ -409,8 +483,12 @@ function AnchorCard({
           <div
             className="w-3 h-3 rounded-full"
             style={{
-              backgroundColor: selected ? COLORS.accent : COLORS.border,
-              border: selected ? 'none' : `2px solid ${COLORS.textMuted}`,
+              backgroundColor: selected
+                ? COLORS.accent
+                : detected
+                  ? COLORS.success
+                  : COLORS.border,
+              border: (selected || detected) ? 'none' : `2px solid ${COLORS.textMuted}`,
             }}
           />
           <div>

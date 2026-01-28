@@ -6,7 +6,12 @@
 import { useState, useCallback } from 'react';
 import type { ViewType } from './types';
 
-// Screens
+// Auth Screens
+import { Splash } from './screens/Splash';
+import { Login } from './screens/Login';
+import { Onboarding } from './screens/Onboarding';
+
+// Main Screens
 import { Overview } from './screens/Overview';
 import { ScoreAnalysis } from './screens/ScoreAnalysis';
 import { VerificationProtocol } from './screens/VerificationProtocol';
@@ -16,6 +21,10 @@ import { TransactionLedger } from './screens/TransactionLedger';
 import { SessionInitiation } from './screens/SessionInitiation';
 import { ActiveSession } from './screens/ActiveSession';
 import { TrustProfile } from './screens/TrustProfile';
+import { ConnectDevices } from './screens/ConnectDevices';
+import { PrivacySettings } from './screens/PrivacySettings';
+import { EquityStatements } from './screens/EquityStatements';
+import { Redeem } from './screens/Redeem';
 
 // Components
 import { BottomNav } from './components/navigation/BottomNav';
@@ -35,17 +44,50 @@ import {
   generateScoreHistory,
   generateActivityCalendar,
   generateWeeklyTrends,
+  mockEquityStatements,
+  mockPEBalance,
+  mockRecentPETransactions,
 } from './services/mockData';
 
-import { COLORS } from './constants';
+import { COLORS, DEMO_CREDENTIALS } from './constants';
 
 function App() {
+  // Auth state
+  const [showSplash, setShowSplash] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+
   const [currentView, setCurrentView] = useState<ViewType>('overview');
 
   // Generate data once
   const [scoreHistory] = useState(() => generateScoreHistory());
   const [activityCalendar] = useState(() => generateActivityCalendar());
   const [weeklyTrends] = useState(() => generateWeeklyTrends());
+
+  // Auth handlers
+  const handleSplashComplete = useCallback(() => {
+    setShowSplash(false);
+  }, []);
+
+  const handleLogin = useCallback(async (email: string, password: string): Promise<boolean> => {
+    // Simulate authentication delay
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    if (email === DEMO_CREDENTIALS.email && password === DEMO_CREDENTIALS.password) {
+      setIsAuthenticated(true);
+      return true;
+    }
+    return false;
+  }, []);
+
+  const handleOnboardingComplete = useCallback(() => {
+    setHasCompletedOnboarding(true);
+  }, []);
+
+  const handleSignOut = useCallback(() => {
+    setIsAuthenticated(false);
+    setCurrentView('overview');
+  }, []);
 
   // Navigation handler
   const handleNavigate = useCallback((view: ViewType) => {
@@ -152,14 +194,34 @@ function App() {
           />
         );
 
-      case 'login':
+      case 'connect-devices':
+        return <ConnectDevices onNavigate={handleNavigate} />;
+
+      case 'settings':
+        return <PrivacySettings onNavigate={handleNavigate} onSignOut={handleSignOut} />;
+
+      case 'equity-statements':
+        return <EquityStatements statements={mockEquityStatements} onNavigate={handleNavigate} />;
+
+      case 'redeem':
         return (
-          <PlaceholderScreen
-            title="AUTHENTICATION"
-            description="Secure login coming soon."
+          <Redeem
+            peBalance={mockPEBalance}
+            recentTransactions={mockRecentPETransactions}
+            pesScore={mockUser.pes}
+            trustTier={mockUser.trust.tier}
             onNavigate={handleNavigate}
           />
         );
+
+      case 'splash':
+        return <Splash onComplete={handleSplashComplete} />;
+
+      case 'login':
+        return <Login onLogin={handleLogin} />;
+
+      case 'onboarding':
+        return <Onboarding onComplete={handleOnboardingComplete} />;
 
       default:
         return (
@@ -174,6 +236,20 @@ function App() {
     }
   };
 
+  // Auth flow: Splash → Login → Onboarding → Main App
+  if (showSplash) {
+    return <Splash onComplete={handleSplashComplete} />;
+  }
+
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  if (!hasCompletedOnboarding) {
+    return <Onboarding onComplete={handleOnboardingComplete} />;
+  }
+
+  // Main authenticated app
   return (
     <div
       className="min-h-screen"
@@ -181,98 +257,6 @@ function App() {
     >
       {renderView()}
       <BottomNav currentView={currentView} onNavigate={handleNavigate} />
-    </div>
-  );
-}
-
-/**
- * PlaceholderScreen - Temporary placeholder for screens not yet implemented
- */
-interface PlaceholderScreenProps {
-  title: string;
-  description: string;
-  onNavigate: (view: ViewType) => void;
-}
-
-function PlaceholderScreen({ title, description, onNavigate }: PlaceholderScreenProps) {
-  return (
-    <div className="min-h-screen pb-20" style={{ backgroundColor: COLORS.background }}>
-      {/* Header */}
-      <header
-        className="sticky top-0 z-40 px-4 py-3 border-b"
-        style={{
-          backgroundColor: COLORS.background,
-          borderColor: COLORS.border,
-        }}
-      >
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
-          <button
-            onClick={() => onNavigate('overview')}
-            className="text-sm font-mono"
-            style={{ color: COLORS.textSecondary }}
-          >
-            ← Back
-          </button>
-          <span
-            className="text-sm font-mono font-semibold"
-            style={{ color: COLORS.textPrimary }}
-          >
-            {title}
-          </span>
-          <div className="w-16" />
-        </div>
-      </header>
-
-      {/* Content */}
-      <main className="px-4 py-6 max-w-4xl mx-auto">
-        <div
-          className="p-8 rounded-lg border text-center"
-          style={{
-            backgroundColor: COLORS.surface,
-            borderColor: COLORS.border,
-          }}
-        >
-          <div
-            className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: COLORS.accent + '20' }}
-          >
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke={COLORS.accent}
-              strokeWidth="1.5"
-            >
-              <path d="M12 2L3 7v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7l-9-5z" />
-              <path d="M12 8v4" />
-              <circle cx="12" cy="16" r="1" fill={COLORS.accent} />
-            </svg>
-          </div>
-          <h2
-            className="text-xl font-mono font-bold mb-2"
-            style={{ color: COLORS.textPrimary }}
-          >
-            {title}
-          </h2>
-          <p
-            className="text-sm font-mono"
-            style={{ color: COLORS.textMuted }}
-          >
-            {description}
-          </p>
-          <button
-            onClick={() => onNavigate('overview')}
-            className="mt-6 px-6 py-2 rounded-lg font-mono text-sm transition-all"
-            style={{
-              backgroundColor: COLORS.accent,
-              color: COLORS.background,
-            }}
-          >
-            Return to Overview
-          </button>
-        </div>
-      </main>
     </div>
   );
 }
