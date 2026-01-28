@@ -1,0 +1,259 @@
+@import "tailwindcss";
+
+/* ============================================
+   PERFORMANCE EQUITY - INSTITUTIONAL DESIGN SYSTEM
+   Bank-Grade Verification Protocol for Human Performance
+   ============================================ */
+
+@theme {
+  /* Base Colors */
+  --color-background: #0A0A0A;
+  --color-surface: #141414;
+  --color-surface-elevated: #1A1A1A;
+  --color-border: #2A2A2A;
+  --color-border-light: #3A3A3A;
+
+  /* Text Colors */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #A0A0A0;
+  --color-text-muted: #606060;
+
+  /* Accent - Gold (Trust) */
+  --color-accent: #FFD400;
+  --color-accent-muted: #B39700;
+  --color-accent-dim: #665800;
+
+  /* Status Colors */
+  --color-success: #00C853;
+  --color-warning: #FF9100;
+  --color-error: #FF5252;
+  --color-info: #2196F3;
+
+  /* Score Tier Colors */
+  --color-score-exceptional: #FFD400;
+  --color-score-excellent: #00C853;
+  --color-score-good: #64DD17;
+  --color-score-building: #FF9100;
+  --color-score-establishing: #FF5252;
+
+  /* Trust Tier Colors */
+  --color-trust-platinum: #E5E4E2;
+  --color-trust-gold: #FFD700;
+  --color-trust-silver: #C0C0C0;
+  --color-trust-grey: #808080;
+  --color-trust-red: #DC143C;
+
+  /* HR Zone Colors (Clinical) */
+  --color-zone-z1: #4FC3F7;
+  --color-zone-z2: #81C784;
+  --color-zone-z3: #FFD54F;
+  --color-zone-z4: #FF8A65;
+  --color-zone-z5: #E57373;
+
+  /* Layer Colors */
+  --color-layer-1: #26C6DA;
+  --color-layer-2: #7E57C2;
+  --color-layer-3: #66BB6A;
+  --color-layer-4: #FFA726;
+  --color-layer-5: #EF5350;
+
+  /* Gate Colors */
+  --color-gate-auto: #00C853;
+  --color-gate-confirm: #FF9100;
+  --color-gate-quarantine: #FF5252;
+
+  /* Typography */
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  --font-sans: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
+
+  /* Font Sizes */
+  --text-2xs: 0.625rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 3rem;
+  --text-4xl: 4rem;
+  --text-5xl: 5rem;
+
+  /* Spacing */
+  --spacing-px: 1px;
+  --spacing-0: 0;
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  --spacing-24: 6rem;
+
+  /* Border Radius */
+  --radius-none: 0;
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-glow-accent: 0 0 20px rgba(255, 212, 0, 0.3);
+  --shadow-glow-success: 0 0 20px rgba(0, 200, 83, 0.3);
+  --shadow-glow-error: 0 0 20px rgba(255, 82, 82, 0.3);
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Safe area for iPhone notch */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+body {
+  margin: 0;
+  overscroll-behavior: none;
+  touch-action: pan-x pan-y;
+  padding: 0;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Monospace Data Text */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Status Indicator Pulse Animation */
+@keyframes pulse-status {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-status {
+  animation: pulse-status 2s ease-in-out infinite;
+}
+
+/* Data Feed Animation */
+@keyframes data-feed {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-data-feed {
+  animation: data-feed 0.3s ease-out;
+}
+
+/* Score Glow Animation */
+@keyframes score-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 212, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 212, 0, 0.4);
+  }
+}
+
+.animate-score-glow {
+  animation: score-glow 3s ease-in-out infinite;
+}
+
+/* Verification Progress Animation */
+@keyframes verification-scan {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-verification-scan {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 212, 0, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: verification-scan 2s linear infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Selection */
+::selection {
+  background: var(--color-accent);
+  color: var(--color-background);
+}
+
+/* Focus Ring */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Utility: Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
