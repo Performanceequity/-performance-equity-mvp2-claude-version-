@@ -303,35 +303,40 @@ export function ScoreAnalysis({
         </section>
       </main>
 
-      {/* Score Projection Modal */}
+      {/* Score Projection - Full Screen Takeover (fixes mobile scroll) */}
       {showProjection && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ backgroundColor: 'rgba(0,0,0,0.85)' }}
+          className="fixed inset-0 z-50 overflow-y-auto"
+          style={{ backgroundColor: COLORS.background }}
         >
-          <div
-            className="w-full max-w-lg p-6 rounded-lg border max-h-[90vh] overflow-y-scroll overscroll-contain touch-pan-y"
+          {/* Sticky Header */}
+          <header
+            className="sticky top-0 z-10 px-4 py-3 border-b"
             style={{
-              backgroundColor: COLORS.surface,
+              backgroundColor: COLORS.background,
               borderColor: COLORS.border,
             }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3
-                className="text-lg font-mono font-bold"
-                style={{ color: COLORS.textPrimary }}
-              >
-                SCORE PROJECTION MODEL
-              </h3>
+            <div className="flex items-center justify-between max-w-4xl mx-auto">
               <button
                 onClick={() => setShowProjection(false)}
-                className="text-lg"
-                style={{ color: COLORS.textMuted }}
+                className="text-sm font-mono"
+                style={{ color: COLORS.textSecondary }}
               >
-                ✕
+                ← Back
               </button>
+              <span
+                className="text-sm font-mono font-semibold"
+                style={{ color: COLORS.textPrimary }}
+              >
+                SCORE PROJECTION
+              </span>
+              <div className="w-16" />
             </div>
+          </header>
 
+          {/* Content */}
+          <div className="px-4 py-6 max-w-4xl mx-auto pb-24">
             <p
               className="text-xs font-mono mb-6"
               style={{ color: COLORS.textMuted }}
@@ -341,8 +346,11 @@ export function ScoreAnalysis({
 
             {/* Current Score */}
             <div
-              className="p-4 rounded-lg mb-6"
-              style={{ backgroundColor: COLORS.background }}
+              className="p-4 rounded-lg border mb-6"
+              style={{
+                backgroundColor: COLORS.surface,
+                borderColor: COLORS.border,
+              }}
             >
               <p className="text-xs font-mono mb-1" style={{ color: COLORS.textMuted }}>
                 CURRENT SCORE
@@ -396,9 +404,15 @@ export function ScoreAnalysis({
             </div>
 
             {/* Factor Impact */}
-            <div className="space-y-3 mb-6">
+            <div
+              className="p-4 rounded-lg border mb-6"
+              style={{
+                backgroundColor: COLORS.surface,
+                borderColor: COLORS.border,
+              }}
+            >
               <h4
-                className="text-xs font-mono font-semibold uppercase tracking-wider"
+                className="text-xs font-mono font-semibold uppercase tracking-wider mb-3"
                 style={{ color: COLORS.textSecondary }}
               >
                 HIGHEST IMPACT FACTORS
@@ -421,7 +435,7 @@ export function ScoreAnalysis({
 
             <button
               onClick={() => setShowProjection(false)}
-              className="w-full py-3 rounded-lg font-mono text-sm font-semibold"
+              className="w-full py-4 rounded-lg font-mono text-sm font-semibold"
               style={{
                 backgroundColor: COLORS.accent,
                 color: COLORS.background,
