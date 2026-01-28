@@ -310,7 +310,7 @@ export function ScoreAnalysis({
           style={{ backgroundColor: 'rgba(0,0,0,0.85)' }}
         >
           <div
-            className="w-full max-w-lg p-6 rounded-lg border max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-lg p-6 rounded-lg border max-h-[90vh] overflow-y-scroll overscroll-contain touch-pan-y"
             style={{
               backgroundColor: COLORS.surface,
               borderColor: COLORS.border,
