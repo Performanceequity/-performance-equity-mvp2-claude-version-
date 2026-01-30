@@ -316,10 +316,10 @@ export function PerformanceMetrics({
                           : day.intensity === 0
                           ? COLORS.border
                           : day.intensity === 1
-                          ? COLORS.zones.Z2 + '40'
+                          ? COLORS.zones.Z2 + 'A0'
                           : day.intensity === 2
-                          ? COLORS.zones.Z3 + '60'
-                          : COLORS.zones.Z5 + '80',
+                          ? COLORS.zones.Z3 + 'C0'
+                          : COLORS.zones.Z5,
                         border: isFuture ? `1px dashed ${COLORS.border}` : 'none',
                       }}
                       title={`${day.date}: ${day.sessions} sessions, ${day.pesEarned} PES`}
@@ -344,7 +344,7 @@ export function PerformanceMetrics({
             <div className="flex items-center gap-1">
               <div
                 className="w-3 h-3 rounded-sm"
-                style={{ backgroundColor: COLORS.zones.Z2 + '40' }}
+                style={{ backgroundColor: COLORS.zones.Z2 + 'A0' }}
               />
               <span className="text-xs font-mono" style={{ color: COLORS.textMuted }}>
                 Z1-Z2
@@ -353,7 +353,7 @@ export function PerformanceMetrics({
             <div className="flex items-center gap-1">
               <div
                 className="w-3 h-3 rounded-sm"
-                style={{ backgroundColor: COLORS.zones.Z3 + '60' }}
+                style={{ backgroundColor: COLORS.zones.Z3 + 'C0' }}
               />
               <span className="text-xs font-mono" style={{ color: COLORS.textMuted }}>
                 Z3
@@ -362,7 +362,7 @@ export function PerformanceMetrics({
             <div className="flex items-center gap-1">
               <div
                 className="w-3 h-3 rounded-sm"
-                style={{ backgroundColor: COLORS.zones.Z5 + '80' }}
+                style={{ backgroundColor: COLORS.zones.Z5 }}
               />
               <span className="text-xs font-mono" style={{ color: COLORS.textMuted }}>
                 Z4-Z5

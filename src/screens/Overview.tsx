@@ -279,36 +279,6 @@ export function Overview({
           </div>
         </section>
 
-        {/* Action Buttons */}
-        <section className="grid grid-cols-2 gap-4">
-          <button
-            onClick={() => onNavigate('session-init')}
-            className="p-4 rounded-lg border transition-all hover:scale-[1.02]"
-            style={{
-              backgroundColor: COLORS.accent,
-              borderColor: COLORS.accent,
-              color: COLORS.background,
-            }}
-          >
-            <span className="text-sm font-mono font-semibold">
-              INITIATE SESSION
-            </span>
-          </button>
-          <button
-            onClick={() => onNavigate('score')}
-            className="p-4 rounded-lg border transition-all hover:scale-[1.02]"
-            style={{
-              backgroundColor: COLORS.surface,
-              borderColor: COLORS.border,
-              color: COLORS.textPrimary,
-            }}
-          >
-            <span className="text-sm font-mono font-semibold">
-              VIEW SCORE ANALYSIS
-            </span>
-          </button>
-        </section>
-
         {/* Weekly Summary */}
         <section
           className="p-4 rounded-lg border"
@@ -389,6 +359,36 @@ export function Overview({
               </p>
             </div>
           </div>
+        </section>
+
+        {/* Action Buttons */}
+        <section className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => onNavigate('session-init')}
+            className="p-4 rounded-lg border transition-all hover:scale-[1.02]"
+            style={{
+              backgroundColor: COLORS.accent,
+              borderColor: COLORS.accent,
+              color: COLORS.background,
+            }}
+          >
+            <span className="text-sm font-mono font-semibold">
+              INITIATE SESSION
+            </span>
+          </button>
+          <button
+            onClick={() => onNavigate('redeem')}
+            className="p-4 rounded-lg border transition-all hover:scale-[1.02]"
+            style={{
+              backgroundColor: COLORS.surface,
+              borderColor: COLORS.border,
+              color: COLORS.textPrimary,
+            }}
+          >
+            <span className="text-sm font-mono font-semibold">
+              REDEEM
+            </span>
+          </button>
         </section>
       </main>
     </div>

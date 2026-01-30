@@ -76,13 +76,25 @@ export function LayerStack({
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <StatusIndicator status={layer.status} size="sm" pulse />
+                {/* Layer 1 (GAVL) uses gold dot, others use StatusIndicator */}
+                {layer.layer === 1 ? (
+                  <div
+                    className="w-2 h-2 rounded-full animate-pulse"
+                    style={{
+                      backgroundColor: layer.status === 'error' ? COLORS.error :
+                                       layer.status === 'warning' ? COLORS.warning :
+                                       COLORS.accent
+                    }}
+                  />
+                ) : (
+                  <StatusIndicator status={layer.status} size="sm" pulse />
+                )}
                 <span
                   className="text-xs font-mono font-semibold"
                   style={{
                     color: layer.status === 'error' ? COLORS.error :
                            layer.status === 'warning' ? COLORS.warning :
-                           COLORS.success
+                           layer.layer === 1 ? COLORS.accent : COLORS.success
                   }}
                 >
                   {layer.statusLabel}
