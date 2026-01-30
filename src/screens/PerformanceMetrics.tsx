@@ -128,9 +128,9 @@ export function PerformanceMetrics({
           >
             TRAINING STATUS
           </h3>
-          <div className="flex items-center gap-6">
+          <div className="space-y-4">
             {/* Status Badge */}
-            <div className="flex-1">
+            <div>
               <div
                 className="h-3 rounded-full overflow-hidden mb-4"
                 style={{ backgroundColor: COLORS.border }}
@@ -157,8 +157,8 @@ export function PerformanceMetrics({
               </p>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Stats - 4 columns on mobile for better spacing */}
+            <div className="grid grid-cols-4 gap-2 pt-4 border-t" style={{ borderColor: COLORS.border }}>
               <div className="text-center">
                 <p
                   className="text-xs font-mono mb-1"
@@ -167,10 +167,10 @@ export function PerformanceMetrics({
                   Load
                 </p>
                 <p
-                  className="text-xl font-mono font-bold"
+                  className="text-base font-mono font-bold"
                   style={{ color: COLORS.textPrimary }}
                 >
-                  {trainingStatus.load}/100
+                  {trainingStatus.load}
                 </p>
               </div>
               <div className="text-center">
@@ -181,7 +181,7 @@ export function PerformanceMetrics({
                   Recovery
                 </p>
                 <p
-                  className="text-xl font-mono font-bold"
+                  className="text-base font-mono font-bold"
                   style={{ color: COLORS.textPrimary }}
                 >
                   {trainingStatus.recoveryHours}h
