@@ -141,4 +141,17 @@ npm run dev -- --host
 
 ---
 
-*Last updated: January 30, 2026, ~1:15 PM*
+---
+
+## Additional Changes (Same Session)
+
+#### 5. Training Status Card Mobile Fix
+**File:** `src/screens/PerformanceMetrics.tsx`
+
+**Issue:** On mobile, the Load value (72/100) was running into the Recovery value (18h) because the 2x2 grid was too cramped.
+
+**Fix:** Changed layout from horizontal side-by-side to vertical stacked. Stats now display in a single row of 4 columns with smaller text and a separator line.
+
+---
+
+*Last updated: January 30, 2026, ~2:00 PM*
