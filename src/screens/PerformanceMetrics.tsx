@@ -441,7 +441,7 @@ export function PerformanceMetrics({
           >
             PES/WEEK TREND
           </h3>
-          <div className="h-48">
+          <div className="h-48 outline-none" style={{ WebkitTapHighlightColor: 'transparent' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weeklyTrends}>
                 <XAxis
