@@ -57,6 +57,30 @@ Added GAVL gym check-in API endpoint for Apple Shortcuts integration.
 - Creates SessionCandidate with 4-hour expiry
 - Logs to Vercel dashboard for debugging
 
+#### 2. Session Upgrade Logic (Same Session)
+
+**Issue:** Original endpoint created a NEW session for each anchor. If geofence fired, then NFC tapped, you'd get two separate sessions instead of one upgraded session.
+
+**Fix:** Now checks for existing open session before creating new one:
+- Geofence → creates session (+0.15)
+- NFC on same user/gym → UPGRADES session (now +0.40)
+- Duplicate anchors → ignored gracefully
+
+**Response now includes:**
+- `action`: `created` | `upgraded` | `duplicate`
+- `anchors`: array of all anchors on the session
+- `storage`: `redis` | `memory` (shows if Upstash is configured)
+
+**Stack/Cap Logic:**
+- Geofence: +0.15
+- NFC: +0.25
+- Both: +0.40 (capped at MAX_SCS_BOOST)
+
+**Persistence:**
+- Supports Upstash Redis for cross-instance persistence
+- Falls back to in-memory if not configured (fine for quick demos)
+- To enable: Add `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to Vercel env vars
+
 ---
 
 ### Apple Shortcuts Setup (Next Steps)
