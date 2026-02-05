@@ -2,6 +2,77 @@
 
 ---
 
+## Session: February 4, 2026
+
+### Summary
+
+Added GAVL gym check-in API endpoint for Apple Shortcuts integration.
+
+---
+
+### What Was Accomplished
+
+#### 1. Gym Check-in API Endpoint
+**File:** `api/gym-checkin.ts`
+
+**Purpose:** Vercel serverless function for GAVL anchoring. Called by Apple Shortcuts when Marc arrives at a gym.
+
+**Endpoint:** `POST /api/gym-checkin`
+
+**Request Body:**
+```json
+{
+  "userId": "marc",
+  "gymId": "golds-venice",
+  "anchorType": "geofence",  // or "nfc"
+  "timestamp": "2026-02-04T10:00:00Z"  // optional
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "sessionId": "SC-M5ABC-X7YZ",
+  "anchorType": "geofence",
+  "scsBoost": 0.15,
+  "gym": { "id": "golds-venice", "name": "Gold's Gym Venice" },
+  "message": "Checked in at Gold's Gym Venice. Session candidate created with +0.15 SCS boost.",
+  "expiresAt": "2026-02-04T14:00:00.000Z"
+}
+```
+
+**SCS Boosts (GAVL Signal Ladder):**
+- `geofence`: +0.15 (Open anchor - medium trust)
+- `nfc`: +0.25 (Closed anchor - high trust)
+
+**Registered Gyms:**
+- `golds-venice`: Gold's Gym Venice - 360 Hampton Dr, Venice, CA 90291
+- `jfm-boxing`: JFM Boxing Club - 3127 Washington Blvd Unit 1, Venice, CA 90292
+- `gracie-originals`: Gracie Originals - 1934 14th St, Santa Monica, CA 90404
+
+**Features:**
+- CORS headers for Apple Shortcuts compatibility
+- Input validation with clear error messages
+- Creates SessionCandidate with 4-hour expiry
+- Logs to Vercel dashboard for debugging
+
+---
+
+### Apple Shortcuts Setup (Next Steps)
+
+1. Create geofence automation for each gym location
+2. On trigger, run Shortcut that POSTs to `/api/gym-checkin`
+3. When NFC tags arrive, program them to call same endpoint with `anchorType: "nfc"`
+
+---
+
+*Last updated: February 4, 2026*
+
+---
+
+---
+
 ## Session: January 30, 2026
 
 ### Summary
@@ -108,6 +179,7 @@ All changes committed and pushed to GitHub:
 
 | File | Purpose |
 |------|---------|
+| `api/gym-checkin.ts` | GAVL gym check-in API for Apple Shortcuts |
 | `src/screens/Overview.tsx` | Main dashboard with score, protocol status, transactions |
 | `src/screens/Redeem.tsx` | PE balance and redemption opportunities |
 | `src/screens/ScoreAnalysis.tsx` | PES breakdown, factors, history, projections |
