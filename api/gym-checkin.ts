@@ -221,6 +221,10 @@ export default async function handler(req: any, res: any) {
     // CHECK FOR EXISTING SESSION
     // -------------------------------------------------------------------------
 
+    // INVARIANT: Multiple anchors may increase confidence on an existing
+    // SessionCandidate but must never create additional sessions for the
+    // same visit window. This is the Guardian contract.
+
     const now = timestamp ? new Date(timestamp).getTime() : Date.now();
     const sessionKey = getSessionKey(userId, gymId);
     const existingSession = await redisGet(sessionKey);
