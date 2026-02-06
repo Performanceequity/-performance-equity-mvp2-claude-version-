@@ -3,8 +3,9 @@
  * Bank-Grade Verification Protocol for Human Performance
  */
 
-import { useState, useCallback } from 'react';
-import type { ViewType } from './types';
+import { useState, useCallback, useEffect } from 'react';
+import type { ViewType, VerifiedTransaction } from './types';
+import { isLiveMode } from './config';
 
 // Auth Screens
 import { Splash } from './screens/Splash';
@@ -29,25 +30,25 @@ import { Redeem } from './screens/Redeem';
 // Components
 import { BottomNav } from './components/navigation/BottomNav';
 
-// Mock Data
+// Data Service (demo mode = mock data, live mode = real API + mock fallback)
 import {
-  mockUser,
-  mockGAVLLayers,
-  mockTransactions,
-  mockSystemHealth,
-  mockGateDistribution,
-  mockCongruencyResult,
-  mockPhysiologicalBaseline,
-  mockTrainingStatus,
-  mockWeeklyMetrics,
-  mockZoneDistribution,
-  generateScoreHistory,
-  generateActivityCalendar,
-  generateWeeklyTrends,
-  mockEquityStatements,
-  mockPEBalance,
-  mockRecentPETransactions,
-} from './services/mockData';
+  fetchTransactions,
+  getUser,
+  getGAVLLayers,
+  getSystemHealth,
+  getGateDistribution,
+  getCongruencyResult,
+  getPhysiologicalBaseline,
+  getTrainingStatus,
+  getWeeklyMetrics,
+  getZoneDistribution,
+  getScoreHistory,
+  getActivityCalendar,
+  getWeeklyTrends,
+  getEquityStatements,
+  getPEBalance,
+  getRecentPETransactions,
+} from './services/dataService';
 
 import { COLORS, DEMO_CREDENTIALS } from './constants';
 
@@ -59,10 +60,31 @@ function App() {
 
   const [currentView, setCurrentView] = useState<ViewType>('overview');
 
+  // Data from service layer
+  const user = getUser();
+  const gavlLayers = getGAVLLayers();
+  const systemHealth = getSystemHealth();
+  const gateDistribution = getGateDistribution();
+  const congruencyResult = getCongruencyResult();
+  const physiologicalBaseline = getPhysiologicalBaseline();
+  const trainingStatus = getTrainingStatus();
+  const weeklyMetrics = getWeeklyMetrics();
+  const zoneDistribution = getZoneDistribution();
+  const equityStatements = getEquityStatements();
+  const peBalance = getPEBalance();
+  const recentPETransactions = getRecentPETransactions();
+
   // Generate data once
-  const [scoreHistory] = useState(() => generateScoreHistory());
-  const [activityCalendar] = useState(() => generateActivityCalendar());
-  const [weeklyTrends] = useState(() => generateWeeklyTrends());
+  const [scoreHistory] = useState(() => getScoreHistory());
+  const [activityCalendar] = useState(() => getActivityCalendar());
+  const [weeklyTrends] = useState(() => getWeeklyTrends());
+
+  // Transactions: stateful in live mode (fetched from API)
+  const [transactions, setTransactions] = useState<VerifiedTransaction[]>([]);
+
+  useEffect(() => {
+    fetchTransactions().then(setTransactions);
+  }, []);
 
   // Auth handlers
   const handleSplashComplete = useCallback(() => {
@@ -111,10 +133,10 @@ function App() {
       case 'overview':
         return (
           <Overview
-            user={mockUser}
-            layers={mockGAVLLayers}
-            transactions={mockTransactions}
-            systemHealth={mockSystemHealth}
+            user={user}
+            layers={gavlLayers}
+            transactions={transactions}
+            systemHealth={systemHealth}
             onNavigate={handleNavigate}
           />
         );
@@ -122,8 +144,8 @@ function App() {
       case 'score':
         return (
           <ScoreAnalysis
-            score={mockUser.pes}
-            factors={mockUser.scoreFactors}
+            score={user.pes}
+            factors={user.scoreFactors}
             history={scoreHistory}
             onNavigate={handleNavigate}
           />
@@ -132,8 +154,8 @@ function App() {
       case 'protocol':
         return (
           <VerificationProtocol
-            layers={mockGAVLLayers}
-            gateDistribution={mockGateDistribution}
+            layers={gavlLayers}
+            gateDistribution={gateDistribution}
             onNavigate={handleNavigate}
           />
         );
@@ -141,9 +163,9 @@ function App() {
       case 'congruency':
         return (
           <AICongruency
-            congruency={mockCongruencyResult}
-            baseline={mockPhysiologicalBaseline}
-            recentSession={mockTransactions[0]}
+            congruency={congruencyResult}
+            baseline={physiologicalBaseline}
+            recentSession={transactions[0]}
             onNavigate={handleNavigate}
           />
         );
@@ -151,11 +173,11 @@ function App() {
       case 'metrics':
         return (
           <PerformanceMetrics
-            trainingStatus={mockTrainingStatus}
-            weeklyMetrics={mockWeeklyMetrics}
+            trainingStatus={trainingStatus}
+            weeklyMetrics={weeklyMetrics}
             activityCalendar={activityCalendar}
             weeklyTrends={weeklyTrends}
-            zoneDistribution={mockZoneDistribution}
+            zoneDistribution={zoneDistribution}
             onNavigate={handleNavigate}
           />
         );
@@ -163,7 +185,7 @@ function App() {
       case 'ledger':
         return (
           <TransactionLedger
-            transactions={mockTransactions}
+            transactions={transactions}
             onNavigate={handleNavigate}
           />
         );
@@ -189,7 +211,7 @@ function App() {
       case 'trust':
         return (
           <TrustProfile
-            trust={mockUser.trust}
+            trust={user.trust}
             onNavigate={handleNavigate}
           />
         );
@@ -201,15 +223,15 @@ function App() {
         return <PrivacySettings onNavigate={handleNavigate} onSignOut={handleSignOut} />;
 
       case 'equity-statements':
-        return <EquityStatements statements={mockEquityStatements} onNavigate={handleNavigate} />;
+        return <EquityStatements statements={equityStatements} onNavigate={handleNavigate} />;
 
       case 'redeem':
         return (
           <Redeem
-            peBalance={mockPEBalance}
-            recentTransactions={mockRecentPETransactions}
-            pesScore={mockUser.pes}
-            trustTier={mockUser.trust.tier}
+            peBalance={peBalance}
+            recentTransactions={recentPETransactions}
+            pesScore={user.pes}
+            trustTier={user.trust.tier}
             onNavigate={handleNavigate}
           />
         );
@@ -226,10 +248,10 @@ function App() {
       default:
         return (
           <Overview
-            user={mockUser}
-            layers={mockGAVLLayers}
-            transactions={mockTransactions}
-            systemHealth={mockSystemHealth}
+            user={user}
+            layers={gavlLayers}
+            transactions={transactions}
+            systemHealth={systemHealth}
             onNavigate={handleNavigate}
           />
         );
@@ -255,6 +277,14 @@ function App() {
       className="min-h-screen"
       style={{ backgroundColor: COLORS.background }}
     >
+      {isLiveMode && (
+        <div
+          className="fixed top-1 right-1 z-50 px-2 py-0.5 rounded text-[10px] font-mono font-bold"
+          style={{ backgroundColor: '#00C853', color: '#000' }}
+        >
+          LIVE
+        </div>
+      )}
       {renderView()}
       <BottomNav currentView={currentView} onNavigate={handleNavigate} />
     </div>

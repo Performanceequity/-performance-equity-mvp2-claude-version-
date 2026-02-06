@@ -37,3 +37,9 @@ npm run dev -- --host
 Fixed: GAVL dot color, Overview layout (REDEEM button, section reorder), calendar color vibrancy.
 
 See `SESSION_LOG.md` for full details.
+
+---
+
+## Global Memory
+
+For cross-project context (people, preferences, full glossary), see: `~/claude-memory/CLAUDE.md`
