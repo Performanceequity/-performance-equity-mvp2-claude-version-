@@ -6,6 +6,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { ViewType, VerifiedTransaction } from './types';
 import { isLiveMode } from './config';
+import type { DataSource } from './services/dataService';
 
 // Auth Screens
 import { Splash } from './screens/Splash';
@@ -81,9 +82,13 @@ function App() {
 
   // Transactions: stateful in live mode (fetched from API)
   const [transactions, setTransactions] = useState<VerifiedTransaction[]>([]);
+  const [dataSource, setDataSource] = useState<DataSource>('mock');
 
   useEffect(() => {
-    fetchTransactions().then(setTransactions);
+    fetchTransactions().then(result => {
+      setTransactions(result.transactions);
+      setDataSource(result.source);
+    });
   }, []);
 
   // Auth handlers
@@ -279,10 +284,23 @@ function App() {
     >
       {isLiveMode && (
         <div
-          className="fixed top-1 right-1 z-50 px-2 py-0.5 rounded text-[10px] font-mono font-bold"
-          style={{ backgroundColor: '#00C853', color: '#000' }}
+          className="fixed top-1 right-1 z-50 flex gap-1"
         >
-          LIVE
+          <div
+            className="px-2 py-0.5 rounded text-[10px] font-mono font-bold"
+            style={{ backgroundColor: '#00C853', color: '#000' }}
+          >
+            LIVE
+          </div>
+          <div
+            className="px-2 py-0.5 rounded text-[10px] font-mono font-bold"
+            style={{
+              backgroundColor: dataSource === 'live' ? '#FFD600' : '#666',
+              color: '#000',
+            }}
+          >
+            {dataSource === 'live' ? 'REAL DATA' : 'MOCK DATA'}
+          </div>
         </div>
       )}
       {renderView()}

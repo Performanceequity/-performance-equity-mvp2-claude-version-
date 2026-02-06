@@ -108,8 +108,15 @@ function transformSession(session: APISession): VerifiedTransaction {
 // LIVE DATA FETCHER
 // =============================================================================
 
-export async function fetchTransactions(): Promise<VerifiedTransaction[]> {
-  if (!isLiveMode) return mockTransactions;
+export type DataSource = 'live' | 'mock';
+
+export interface TransactionResult {
+  transactions: VerifiedTransaction[];
+  source: DataSource;
+}
+
+export async function fetchTransactions(): Promise<TransactionResult> {
+  if (!isLiveMode) return { transactions: mockTransactions, source: 'mock' };
 
   try {
     const res = await fetch('/api/sessions?userId=marc');
@@ -118,14 +125,17 @@ export async function fetchTransactions(): Promise<VerifiedTransaction[]> {
     const data = await res.json();
 
     if (data.success && data.sessions && data.sessions.length > 0) {
-      return data.sessions.map((s: APISession) => transformSession(s));
+      return {
+        transactions: data.sessions.map((s: APISession) => transformSession(s)),
+        source: 'live',
+      };
     }
 
     // No real sessions yet - fall back to mock
-    return mockTransactions;
+    return { transactions: mockTransactions, source: 'mock' };
   } catch (err) {
     console.warn('[DataService] Failed to fetch live sessions, using mock:', err);
-    return mockTransactions;
+    return { transactions: mockTransactions, source: 'mock' };
   }
 }
 
