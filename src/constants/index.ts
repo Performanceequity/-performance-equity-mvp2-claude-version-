@@ -147,6 +147,7 @@ export const ANCHOR_LABELS: Record<string, string> = {
   ble: 'BLE Keys',
   wifi: 'Wi-Fi BSSID',
   geo: 'GNSS Geo',
+  geo_exit: 'GNSS Geo Exit',
 };
 
 // ============================================

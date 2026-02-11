@@ -119,7 +119,11 @@ export default async function handler(req: any, res: any) {
         id: s.gymId,
         name: s.gymName,
       },
-      anchors: s.anchors.map(a => a.type),
+      anchors: s.anchors.map(a => ({
+        type: a.type,
+        boost: a.boost,
+        timestamp: new Date(a.timestamp).toISOString(),
+      })),
       scsBoost: s.scsBoost,
       status: s.status,
       startedAt: new Date(s.createdAt).toISOString(),

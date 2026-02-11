@@ -30,10 +30,16 @@ import {
 // API RESPONSE TYPES (matches GET /api/sessions response)
 // =============================================================================
 
+interface APIAnchor {
+  type: string;
+  boost: number;
+  timestamp: string;
+}
+
 interface APISession {
   sessionId: string;
   gym: { id: string; name: string };
-  anchors: string[];
+  anchors: APIAnchor[] | string[];  // Support both old (string[]) and new (object[]) format
   scsBoost: number;
   status: string;
   startedAt: string;
@@ -45,9 +51,24 @@ interface APISession {
 // TRANSFORMER: API SessionCandidate → Frontend VerifiedTransaction
 // =============================================================================
 
-function mapAnchorType(anchors: string[]): AnchorType {
-  if (anchors.includes('nfc')) return 'nfc';
-  if (anchors.includes('geofence')) return 'geo';
+// Normalize anchors from API (handles both old string[] and new object[] format)
+function parseAnchors(anchors: APIAnchor[] | string[], sessionStart: string): APIAnchor[] {
+  if (anchors.length === 0) return [];
+  if (typeof anchors[0] === 'string') {
+    // Old format: string array — convert to objects
+    return (anchors as string[]).map(a => ({
+      type: a,
+      boost: a === 'nfc' ? 0.25 : 0.15,
+      timestamp: sessionStart,
+    }));
+  }
+  return anchors as APIAnchor[];
+}
+
+function mapAnchorType(anchors: APIAnchor[]): AnchorType {
+  // Return highest-confidence anchor for main display
+  if (anchors.some(a => a.type === 'nfc')) return 'nfc';
+  if (anchors.some(a => a.type === 'geofence')) return 'geo';
   return 'geo';
 }
 
@@ -57,13 +78,33 @@ function determineGate(scs: number): GateType {
   return 'quarantine';
 }
 
+// Map API anchor types to display names for chain of custody
+function anchorEventName(type: string): string {
+  switch (type) {
+    case 'geofence': return 'Geofence anchor (arrive)';
+    case 'nfc': return 'NFC anchor (tap verified)';
+    case 'geofence_exit': return 'Geofence anchor (exit)';
+    default: return `${type} anchor`;
+  }
+}
+
+function anchorProofType(type: string): string {
+  switch (type) {
+    case 'nfc': return 'nfc';
+    case 'geofence': return 'gps';
+    case 'geofence_exit': return 'gps';
+    default: return 'gps';
+  }
+}
+
 function transformSession(session: APISession): VerifiedTransaction {
   const timestamp = new Date(session.startedAt).getTime();
   const duration = session.duration || 0;
-  const anchor = mapAnchorType(session.anchors);
+  const anchors = parseAnchors(session.anchors, session.startedAt);
+  const anchor = mapAnchorType(anchors);
 
-  // Base SCS (0.50) + anchor boosts
-  const scs = Math.min(0.50 + session.scsBoost, 1.0);
+  // Base SCS (0.50) + anchor boosts, cap at 0.95
+  const scs = Math.min(0.50 + session.scsBoost, 0.95);
   const gate = determineGate(scs);
 
   const status: SessionStatus =
@@ -84,22 +125,19 @@ function transformSession(session: APISession): VerifiedTransaction {
     gate,
     pesDelta: gate === 'quarantine' ? 0 : Math.round(duration * 0.08 * 10) / 10,
     status,
-    proofs: session.anchors.map(a => ({
-      type: a === 'nfc' ? 'nfc' : 'gps',
+    // Build proofs from EVERY anchor in the session
+    proofs: anchors.map(a => ({
+      type: anchorProofType(a.type),
       status: 'verified' as const,
-      timestamp,
-      details: `${a} anchor verified`,
+      timestamp: new Date(a.timestamp).getTime(),
+      details: anchorEventName(a.type),
     })),
-    chainOfCustody: [
-      { timestamp, event: 'Session initiated', type: `${anchor}_anchor` },
-      ...(session.endedAt
-        ? [{
-            timestamp: new Date(session.endedAt).getTime(),
-            event: 'Session finalized',
-            type: 'geofence_exit',
-          }]
-        : []),
-    ],
+    // Build chain of custody from EVERY anchor with its real timestamp
+    chainOfCustody: anchors.map(a => ({
+      timestamp: new Date(a.timestamp).getTime(),
+      event: anchorEventName(a.type),
+      type: a.type === 'nfc' ? 'nfc_anchor' : a.type === 'geofence_exit' ? 'geofence_exit' : 'geo_anchor',
+    })),
     merkleRoot: '0x' + session.sessionId.replace(/-/g, '').padEnd(64, '0'),
   };
 }

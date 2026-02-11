@@ -23,7 +23,7 @@ const GYMS: Record<string, { name: string }> = {
 // =============================================================================
 
 interface Anchor {
-  type: 'geofence' | 'nfc';
+  type: 'geofence' | 'nfc' | 'geofence_exit';
   boost: number;
   timestamp: number;
 }
@@ -228,6 +228,15 @@ export default async function handler(req: any, res: any) {
 
     // Finalize the session
     const now = timestamp ? new Date(timestamp).getTime() : Date.now();
+
+    // Record geofence exit as an anchor in the chain of custody
+    session.anchors.push({
+      type: 'geofence_exit',
+      boost: 0.10,
+      timestamp: now,
+    });
+    session.scsBoost = Math.min(session.scsBoost + 0.10, 0.50);
+
     session.status = 'finalized';
     session.endedAt = now;
     session.updatedAt = now;
