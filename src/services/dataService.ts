@@ -83,6 +83,7 @@ function anchorEventName(type: string): string {
   switch (type) {
     case 'geofence': return 'Geofence anchor (arrive)';
     case 'nfc': return 'NFC anchor (tap verified)';
+    case 'nfc_exit': return 'NFC anchor (exit tap verified)';
     case 'geofence_exit': return 'Geofence anchor (exit)';
     default: return `${type} anchor`;
   }
@@ -91,6 +92,7 @@ function anchorEventName(type: string): string {
 function anchorProofType(type: string): string {
   switch (type) {
     case 'nfc': return 'nfc';
+    case 'nfc_exit': return 'nfc';
     case 'geofence': return 'gps';
     case 'geofence_exit': return 'gps';
     default: return 'gps';
