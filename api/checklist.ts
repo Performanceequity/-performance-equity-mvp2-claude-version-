@@ -1,22 +1,23 @@
 /**
- * Mission Control Checklist Sync
+ * Mission Control Checklist + Urgent Items Sync
  *
- * GET /api/checklist  → returns saved checklist state (index → boolean)
- * POST /api/checklist → saves checklist state to Redis
+ * GET /api/checklist  → returns checklist state + urgent items state
+ * POST /api/checklist → saves checklist + urgent state to Redis
  *
  * Enables cross-device sync — check a box on phone, see it on Mac.
+ * Stores both checklist (index → {done, priority}) and urgent items state.
  */
 
 const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
 const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-const REDIS_KEY = 'mc:checklist';
+const REDIS_KEY = 'mc:dashboard';
 
 function isUpstashConfigured(): boolean {
   return !!(UPSTASH_URL && UPSTASH_TOKEN);
 }
 
-async function getFromRedis(): Promise<Record<string, boolean> | null> {
+async function getFromRedis(): Promise<any | null> {
   if (!isUpstashConfigured()) return null;
   try {
     const res = await fetch(`${UPSTASH_URL}/get/${encodeURIComponent(REDIS_KEY)}`, {
@@ -32,7 +33,7 @@ async function getFromRedis(): Promise<Record<string, boolean> | null> {
   }
 }
 
-async function saveToRedis(payload: Record<string, boolean>): Promise<boolean> {
+async function saveToRedis(payload: any): Promise<boolean> {
   if (!isUpstashConfigured()) return false;
   try {
     await fetch(`${UPSTASH_URL}`, {
@@ -61,15 +62,21 @@ export default async function handler(req: any, res: any) {
 
   if (req.method === 'GET') {
     const data = await getFromRedis();
-    return res.status(200).json({ success: true, data: data || {} });
+    return res.status(200).json({
+      success: true,
+      data: data || { checklist: {}, urgent: {} },
+    });
   }
 
   if (req.method === 'POST') {
-    const { checklist } = req.body || {};
-    if (!checklist || typeof checklist !== 'object') {
-      return res.status(400).json({ error: 'checklist object required' });
-    }
-    const saved = await saveToRedis(checklist);
+    const { checklist, urgent } = req.body || {};
+    // Merge with existing data so checklist and urgent can be saved independently
+    const existing = await getFromRedis() || {};
+    const merged = {
+      checklist: checklist || existing.checklist || {},
+      urgent: urgent || existing.urgent || {},
+    };
+    const saved = await saveToRedis(merged);
     return res.status(200).json({ success: saved });
   }
 
