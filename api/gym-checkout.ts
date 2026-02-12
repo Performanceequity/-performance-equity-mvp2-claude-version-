@@ -23,7 +23,7 @@ const GYMS: Record<string, { name: string }> = {
 // =============================================================================
 
 interface Anchor {
-  type: 'geofence' | 'nfc' | 'geofence_exit';
+  type: 'geofence' | 'nfc' | 'nfc_exit' | 'geofence_exit';
   boost: number;
   timestamp: number;
 }
@@ -235,17 +235,42 @@ export default async function handler(req: any, res: any) {
       boost: 0.10,
       timestamp: now,
     });
-    session.scsBoost = Math.min(session.scsBoost + 0.10, 0.50);
+    session.scsBoost = Math.min(session.scsBoost + 0.10, 0.65);
 
-    session.status = 'finalized';
     session.endedAt = now;
     session.updatedAt = now;
     session.duration = Math.round((now - session.createdAt) / 1000 / 60); // minutes
 
+    // Ghost session detection: <10 min AND no NFC anchor = geofence blip, not a real session
+    const hasNfc = session.anchors.some(a => a.type === 'nfc' || a.type === 'nfc_exit');
+    const isGhost = session.duration < 10 && !hasNfc;
+
+    if (isGhost) {
+      session.status = 'pending'; // Ghost — not finalized, kept as pending for review
+      await redisSet(sessionKey, session, 60 * 60); // Keep ghost for 1h then expire
+
+      console.log(`[GAVL] GHOST SESSION detected | ${gym.name} | Duration: ${session.duration}min | No NFC | Session: ${session.id}`);
+
+      return res.status(200).json({
+        success: true,
+        sessionId: session.id,
+        gym: { id: gymId, name: gym.name },
+        anchors: session.anchors.map(a => ({ type: a.type, boost: a.boost })),
+        scsBoost: session.scsBoost,
+        status: 'ghost',
+        startedAt: new Date(session.createdAt).toISOString(),
+        endedAt: new Date(session.endedAt).toISOString(),
+        duration: session.duration,
+        message: `Ghost session detected at ${gym.name}. Duration: ${session.duration} min, no NFC. Not finalized.`,
+      });
+    }
+
+    session.status = 'finalized';
+
     // Save finalized session (keep for 24h for history access)
     await redisSet(sessionKey, session, 24 * 60 * 60);
 
-    // Append to user's history
+    // Append to user's history (only finalized sessions go to history)
     await appendToHistory(userId, session);
 
     console.log(`[GAVL] Session FINALIZED | ${gym.name} | Duration: ${session.duration}min | SCS: +${session.scsBoost} | Session: ${session.id}`);
