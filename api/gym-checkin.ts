@@ -6,8 +6,8 @@
  *
  * UPGRADE LOGIC:
  * - If an open session exists for this user+gym (within 4hr window), add anchor to it
- * - Anchors STACK: geofence (+0.15) + NFC (+0.25) = +0.40 total
- * - Cap at 0.40 max SCS boost per session
+ * - Anchors STACK: geofence (+0.15) + NFC (+0.25) + WiFi BSSID (+0.10) = +0.50 total
+ * - Cap at 0.65 max SCS boost per session (full chain with exit anchors)
  *
  * POST /api/gym-checkin
  * Body: { userId, gymId, anchorType, timestamp }
@@ -37,11 +37,12 @@ const GYMS: Record<string, { name: string; address: string; coords: [number, num
 
 // SCS boost values per anchor type (from GAVL Signal Ladder)
 const SCS_BOOSTS: Record<string, number> = {
-  geofence: 0.15, // Open anchor - medium trust
-  nfc: 0.25,      // Closed anchor - high trust
+  geofence: 0.15,    // Open anchor - medium trust
+  nfc: 0.25,         // Closed anchor - high trust
+  wifi_bssid: 0.10,  // Open anchor - environmental signal, auto-connect
 };
 
-const MAX_SCS_BOOST = 0.40; // Cap for stacked anchors
+const MAX_SCS_BOOST = 0.65; // Cap for stacked anchors (full chain max)
 const SESSION_TTL_HOURS = 4;
 const SESSION_TTL_MS = SESSION_TTL_HOURS * 60 * 60 * 1000;
 
@@ -50,7 +51,7 @@ const SESSION_TTL_MS = SESSION_TTL_HOURS * 60 * 60 * 1000;
 // =============================================================================
 
 interface Anchor {
-  type: 'geofence' | 'nfc';
+  type: 'geofence' | 'nfc' | 'wifi_bssid';
   boost: number;
   timestamp: number;
 }
@@ -153,7 +154,7 @@ function isSessionExpired(session: SessionCandidate): boolean {
   return Date.now() > session.expiresAt;
 }
 
-function hasAnchorType(session: SessionCandidate, type: 'geofence' | 'nfc'): boolean {
+function hasAnchorType(session: SessionCandidate, type: 'geofence' | 'nfc' | 'wifi_bssid'): boolean {
   return session.anchors.some(a => a.type === type);
 }
 
@@ -202,10 +203,10 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    if (!anchorType || !['geofence', 'nfc'].includes(anchorType)) {
+    if (!anchorType || !['geofence', 'nfc', 'wifi_bssid'].includes(anchorType)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid anchorType. Must be "geofence" or "nfc".',
+        error: 'Invalid anchorType. Must be "geofence", "nfc", or "wifi_bssid".',
       });
     }
 
@@ -231,7 +232,7 @@ export default async function handler(req: any, res: any) {
 
     const anchorBoost = SCS_BOOSTS[anchorType];
     const newAnchor: Anchor = {
-      type: anchorType as 'geofence' | 'nfc',
+      type: anchorType as 'geofence' | 'nfc' | 'wifi_bssid',
       boost: anchorBoost,
       timestamp: now,
     };
@@ -245,7 +246,7 @@ export default async function handler(req: any, res: any) {
       // -----------------------------------------------------------------------
 
       // Check if this anchor type already exists
-      if (hasAnchorType(existingSession, anchorType as 'geofence' | 'nfc')) {
+      if (hasAnchorType(existingSession, anchorType as 'geofence' | 'nfc' | 'wifi_bssid')) {
         // Duplicate anchor - don't add again, but return success
         action = 'duplicate';
         session = existingSession;
